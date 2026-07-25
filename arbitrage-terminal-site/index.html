@@ -1,0 +1,3230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arbitrage Terminal — live crypto arbitrage scanner</title>
+<meta name="description" content="Live cross-exchange arbitrage scanner: 10 exchanges, executable bid/ask spreads, funding plays, simulator, academy. EN/BG/RU.">
+<meta property="og:title" content="Arbitrage Terminal">
+<meta property="og:description" content="Live cross-exchange arbitrage scanner across 10 crypto exchanges with simulator and trade journal.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0B0D12">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{
+  --bg:#0B0D12;
+  --bg-elev:#10131A;
+  --glass:rgba(22,26,36,.72);
+  --glass-strong:rgba(26,30,42,.9);
+  --hair:rgba(255,255,255,.08);
+  --hair-strong:rgba(255,255,255,.14);
+  --txt:#F5F7FA;
+  --txt-2:#9AA3B8;
+  --txt-3:#5E6678;
+  --green:#30D158;
+  --red:#FF453A;
+  --blue:#0A84FF;
+  --yellow:#FFD60A;
+  --orange:#FF9F0A;
+  --green-dim:rgba(48,209,88,.12);
+  --red-dim:rgba(255,69,58,.12);
+  --blue-dim:rgba(10,132,255,.14);
+  --r-lg:20px;
+  --r-md:14px;
+  --r-sm:10px;
+  --mono:"SF Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--txt);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.45;
+  overflow-x:hidden;
+  padding-bottom:110px;
+}
+::-webkit-scrollbar{height:0;width:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;gap:14px;
+  padding:calc(env(safe-area-inset-top, 0px) + 12px) 18px 12px;
+  background:rgba(11,13,18,.78);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+  backdrop-filter:saturate(180%) blur(22px);
+  border-bottom:1px solid var(--hair);
+}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(145deg,#1E2430,#12151D);
+  border:1px solid var(--hair-strong);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);
+}
+.logo-name{font-size:15px;font-weight:600;letter-spacing:-.02em}
+.logo-name span{color:var(--txt-2);font-weight:400}
+.live{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 10px;border-radius:99px;
+  background:var(--green-dim);border:1px solid rgba(48,209,88,.25);
+  font-size:11px;font-weight:600;color:var(--green);letter-spacing:.04em;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(48,209,88,.5)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(48,209,88,0)}}
+.topbar-spacer{flex:1}
+.clock{font-family:var(--mono);font-size:12px;color:var(--txt-2)}
+
+/* ---------- STATS STRIP ---------- */
+.stats{
+  display:flex;gap:10px;overflow-x:auto;
+  padding:16px 18px 6px;
+  scroll-snap-type:x proximity;
+}
+.stat{
+  flex:0 0 auto;min-width:128px;
+  scroll-snap-align:start;
+  padding:12px 14px;border-radius:var(--r-md);
+  background:var(--glass);border:1px solid var(--hair);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+}
+.stat-label{font-size:11px;color:var(--txt-2);letter-spacing:.02em;margin-bottom:4px}
+.stat-value{font-family:var(--mono);font-size:19px;font-weight:600;letter-spacing:-.02em}
+.stat-value small{font-size:12px;color:var(--txt-2);font-weight:400}
+.stat-value.up{color:var(--green)}
+.stat-sub{font-size:11px;color:var(--txt-2);margin-top:2px}
+
+/* ---------- SECTION ---------- */
+.section{padding:18px 18px 0}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:19px;font-weight:700;letter-spacing:-.03em}
+.section-link{font-size:13px;color:var(--blue);font-weight:500;cursor:pointer}
+
+/* ---------- TOP CARDS ---------- */
+.cards{
+  display:flex;gap:12px;overflow-x:auto;
+  margin:0 -18px;padding:2px 18px 6px;
+  scroll-snap-type:x mandatory;
+}
+.card{
+  flex:0 0 236px;scroll-snap-align:start;
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  padding:15px 16px 13px;
+  cursor:pointer;
+  transition:transform .25s cubic-bezier(.3,1.4,.5,1),border-color .2s;
+}
+.card:active{transform:scale(.97)}
+.card-tag{
+  display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;
+  padding:3px 8px;border-radius:6px;margin-bottom:10px;
+}
+.tag-hot{background:var(--red-dim);color:var(--red)}
+.tag-sf{background:var(--blue-dim);color:var(--blue)}
+.tag-ff{background:rgba(255,214,10,.12);color:var(--yellow)}
+.tag-fund{background:rgba(191,90,242,.14);color:#BF5AF2}
+.card-pair{display:flex;align-items:center;gap:8px;margin-bottom:2px}
+.coin{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;
+}
+.card-pair-name{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.card-route{font-size:11px;color:var(--txt-2);margin-bottom:10px}
+.card-bottom{display:flex;align-items:flex-end;justify-content:space-between}
+.card-spread{font-family:var(--mono);font-size:24px;font-weight:600;color:var(--green);letter-spacing:-.03em}
+.card-roi{font-size:11px;color:var(--txt-2)}
+.card-roi b{color:var(--txt);font-family:var(--mono);font-weight:600}
+.spark{display:block}
+
+/* ---------- SEGMENTED CONTROL ---------- */
+.seg-wrap{position:relative;margin-bottom:12px;overflow-x:auto;margin-left:-18px;margin-right:-18px;padding:0 18px}
+.seg{
+  position:relative;display:inline-flex;gap:2px;
+  background:rgba(255,255,255,.06);
+  border-radius:11px;padding:3px;
+  border:1px solid var(--hair);
+}
+.seg-pill{
+  position:absolute;top:3px;left:3px;height:calc(100% - 6px);
+  background:rgba(255,255,255,.12);
+  border:1px solid var(--hair-strong);
+  border-radius:8px;z-index:0;
+  transition:transform .35s cubic-bezier(.3,1.25,.4,1),width .35s cubic-bezier(.3,1.25,.4,1);
+  box-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+.seg button{
+  position:relative;z-index:1;
+  background:none;border:none;color:var(--txt-2);
+  font-family:var(--sans);font-size:13px;font-weight:600;
+  padding:7px 14px;border-radius:8px;cursor:pointer;
+  white-space:nowrap;transition:color .2s;
+}
+.seg button.on{color:var(--txt)}
+
+/* ---------- FILTER CHIPS + MENUS ---------- */
+.filters{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;margin-left:-18px;margin-right:-18px;padding:0 18px;position:relative}
+.chip{
+  flex-shrink:0;display:flex;align-items:center;gap:6px;
+  background:var(--glass);border:1px solid var(--hair);
+  border-radius:99px;padding:7px 13px;
+  font-size:12.5px;font-weight:500;color:var(--txt);
+  cursor:pointer;user-select:none;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1),border-color .2s,background .2s;
+}
+.chip:active{transform:scale(.94)}
+.chip.active{border-color:rgba(10,132,255,.45);background:var(--blue-dim);color:var(--blue)}
+.chip .chev{font-size:9px;color:var(--txt-2);transition:transform .25s}
+.chip.open .chev{transform:rotate(180deg)}
+
+.menu{
+  position:fixed;z-index:380;min-width:210px;
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:saturate(180%) blur(28px);backdrop-filter:saturate(180%) blur(28px);
+  border:1px solid var(--hair-strong);
+  border-radius:14px;padding:5px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3);
+  opacity:0;transform:scale(.92) translateY(-6px);transform-origin:top left;
+  pointer-events:none;
+  transition:opacity .18s ease,transform .22s cubic-bezier(.3,1.3,.4,1);
+}
+.menu.show{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+.menu-item{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:9px 12px;border-radius:9px;
+  font-size:13.5px;color:var(--txt);cursor:pointer;
+  transition:background .12s;
+}
+.menu-item:hover,.menu-item:active{background:rgba(255,255,255,.09)}
+.menu-item .check{color:var(--blue);font-weight:700;opacity:0;font-size:13px}
+.menu-item.sel .check{opacity:1}
+.menu-sep{height:1px;background:var(--hair);margin:5px 8px}
+.menu-label{font-size:11px;color:var(--txt-2);padding:7px 12px 3px;letter-spacing:.03em}
+
+/* ---------- TABLE ---------- */
+.table{
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  overflow:hidden;
+}
+.thead{
+  display:grid;grid-template-columns:1fr 92px 74px;
+  padding:11px 16px 9px;
+  font-size:10.5px;font-weight:600;color:var(--txt-2);letter-spacing:.05em;
+  border-bottom:1px solid var(--hair);
+}
+.thead .r{text-align:right}
+.row{
+  display:grid;grid-template-columns:1fr 92px 74px;
+  align-items:center;
+  padding:12px 16px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  cursor:pointer;
+  transition:background .15s;
+  animation:rowIn .4s cubic-bezier(.2,.9,.3,1) backwards;
+}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.row:last-child{border-bottom:none}
+.row:active{background:rgba(255,255,255,.05)}
+.row-main{display:flex;align-items:center;gap:11px;min-width:0}
+.row-info{min-width:0}
+.row-pair{font-size:14.5px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+.strat-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.row-route{font-size:11.5px;color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.row-route b{color:var(--txt-2);font-weight:600}
+.row-spread{text-align:right}
+.row-spread-val{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.02em;padding:2px 6px;border-radius:6px;display:inline-block;transition:background .5s,color .3s}
+.row-spread-val.pos{color:var(--green)}
+.row-spread-val.flash-up{background:var(--green-dim)}
+.row-spread-val.flash-dn{background:var(--red-dim);color:var(--red)}
+.row-sub{font-size:10.5px;color:var(--txt-2);margin-top:1px}
+.row-right{text-align:right}
+.row-profit{font-family:var(--mono);font-size:13.5px;font-weight:600}
+.risk{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:var(--txt-2);margin-top:2px;justify-content:flex-end}
+.risk-dot{width:6px;height:6px;border-radius:50%}
+
+/* ---------- SHEET ---------- */
+.sheet-backdrop{
+  position:fixed;inset:0;z-index:355;
+  background:rgba(0,0,0,.5);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .3s;
+}
+.sheet-backdrop.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:360;
+  max-height:88dvh;
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);
+  border:1px solid var(--hair-strong);border-bottom:none;
+  border-radius:24px 24px 0 0;
+  transform:translateY(105%);
+  box-shadow:0 -20px 60px rgba(0,0,0,.5);
+  overflow-y:auto;overscroll-behavior:contain;
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);
+  touch-action:pan-y;
+}
+.sheet.anim{transition:transform .55s cubic-bezier(.24,1.25,.32,1)}
+.sheet.show{transform:translateY(0)}
+.sheet-grab{position:sticky;top:0;padding:10px 0 6px;display:flex;justify-content:center;background:transparent;z-index:2}
+.sheet-grab::before{content:"";width:38px;height:5px;border-radius:99px;background:rgba(255,255,255,.22)}
+.sheet-in{padding:4px 22px 0}
+.sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.sheet-pair{font-size:22px;font-weight:700;letter-spacing:-.03em}
+.sheet-strat{font-size:11px;font-weight:700;letter-spacing:.05em;padding:4px 9px;border-radius:7px}
+.sheet-route{font-size:13px;color:var(--txt-2);margin-bottom:18px}
+.sheet-route b{color:var(--txt)}
+.sheet-big{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.sheet-spread{font-family:var(--mono);font-size:42px;font-weight:600;letter-spacing:-.04em;color:var(--green)}
+.sheet-delta{font-family:var(--mono);font-size:14px;color:var(--txt-2)}
+.sheet-chart-wrap{margin:14px -6px 20px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.cell{background:rgba(255,255,255,.045);border:1px solid var(--hair);border-radius:var(--r-md);padding:11px 13px}
+.cell-l{font-size:11px;color:var(--txt-2);margin-bottom:3px}
+.cell-v{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.sheet-sec-title{font-size:15px;font-weight:700;letter-spacing:-.02em;margin-bottom:10px}
+.steps{margin-bottom:22px}
+.step{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.step:last-child{border-bottom:none}
+.step-n{
+  width:22px;height:22px;flex-shrink:0;border-radius:50%;
+  background:var(--blue-dim);color:var(--blue);
+  font-family:var(--mono);font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:1px;
+}
+.step-t{font-size:13.5px;color:var(--txt)}
+.step-t small{display:block;color:var(--txt-2);font-size:12px;margin-top:1px}
+.calc{background:rgba(255,255,255,.045);border:1px solid var(--hair);border-radius:var(--r-lg);padding:16px;margin-bottom:20px}
+.calc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calc-label{font-size:13px;color:var(--txt-2)}
+.calc-input{
+  background:rgba(0,0,0,.35);border:1px solid var(--hair-strong);
+  border-radius:10px;color:var(--txt);
+  font-family:var(--mono);font-size:15px;font-weight:600;
+  padding:8px 12px;width:130px;text-align:right;outline:none;
+  transition:border-color .2s;
+}
+.calc-input:focus{border-color:var(--blue)}
+.calc-out{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--hair);padding-top:12px}
+.calc-o-l{font-size:10.5px;color:var(--txt-2);margin-bottom:2px}
+.calc-o-v{font-family:var(--mono);font-size:15px;font-weight:600}
+.btns{display:flex;gap:10px}
+.btn{
+  flex:1;border:none;border-radius:13px;padding:14px;
+  font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1),opacity .2s;
+}
+.btn:active{transform:scale(.96)}
+.btn-pri{background:var(--blue);color:#fff}
+.btn-sec{background:rgba(255,255,255,.09);color:var(--txt);border:1px solid var(--hair-strong)}
+
+/* ---------- ASSISTANT BANNER ---------- */
+.assist{
+  display:flex;gap:11px;align-items:flex-start;
+  border-radius:var(--r-md);padding:12px 14px;margin-bottom:20px;
+  border:1px solid;font-size:13px;
+}
+.assist.hold{background:var(--green-dim);border-color:rgba(48,209,88,.25)}
+.assist.hold .assist-s{color:var(--green)}
+.assist-s{font-weight:700;font-size:13px;white-space:nowrap}
+.assist-t{color:var(--txt-2);line-height:1.5}
+.assist-t b{color:var(--txt);font-weight:600}
+
+/* ---------- MARKET REGIME ---------- */
+.regime{
+  display:flex;gap:0;margin-bottom:14px;
+  border-radius:var(--r-md);
+  background:var(--glass);border:1px solid var(--hair);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  overflow-x:auto;
+}
+.regime-item{
+  flex:1;min-width:96px;padding:10px 14px;
+  border-right:1px solid var(--hair);
+}
+.regime-item:last-child{border-right:none}
+.regime-l{font-size:10px;color:var(--txt-2);letter-spacing:.05em;margin-bottom:2px;white-space:nowrap}
+.regime-v{font-size:13px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+
+/* ---------- EXCHANGE HEALTH ---------- */
+.exh{
+  display:flex;gap:8px;overflow-x:auto;
+  margin:12px -18px 0;padding:0 18px 4px;
+}
+.exh-item{
+  flex-shrink:0;display:flex;align-items:center;gap:7px;
+  background:var(--glass);border:1px solid var(--hair);
+  border-radius:99px;padding:6px 12px;
+  font-size:12px;font-weight:500;
+}
+.exh-dot{width:6px;height:6px;border-radius:50%}
+.exh-ms{font-family:var(--mono);font-size:11px;color:var(--txt-2)}
+
+/* ---------- LIFETIME / COUNTDOWN / CONFIDENCE ---------- */
+.life{font-size:10.5px;color:var(--txt-2)}
+.life b{color:var(--txt-2);font-weight:600}
+.sheet-life{font-size:12px;color:var(--txt-2);margin:-12px 0 16px}
+.sheet-life b{color:var(--txt);font-weight:600}
+.fund-banner{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(191,90,242,.1);border:1px solid rgba(191,90,242,.28);
+  border-radius:var(--r-md);padding:12px 16px;margin-bottom:16px;
+}
+.fund-banner-l{font-size:12px;color:#BF5AF2;font-weight:700;letter-spacing:.04em}
+.fund-banner-t{font-family:var(--mono);font-size:24px;font-weight:600;letter-spacing:0;color:var(--txt)}
+.conf-bar{height:4px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden}
+.conf-fill{height:100%;border-radius:99px;background:var(--green);transition:width .4s}
+
+/* ---------- TUTORIAL ---------- */
+.help-btn{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.08);border:1px solid var(--hair-strong);
+  color:var(--txt-2);font-size:14px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1),background .2s;
+}
+.help-btn:active{transform:scale(.9)}
+.welcome{
+  position:fixed;inset:0;z-index:365;
+  display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  opacity:0;pointer-events:none;transition:opacity .35s;
+}
+.welcome.show{opacity:1;pointer-events:auto}
+.welcome-card{
+  width:100%;max-width:440px;
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);
+  border:1px solid var(--hair-strong);
+  border-radius:28px 28px 0 0;
+  padding:34px 26px calc(env(safe-area-inset-bottom,0px) + 26px);
+  transform:translateY(60px);transition:transform .55s cubic-bezier(.24,1.25,.32,1);
+}
+.welcome.show .welcome-card{transform:translateY(0)}
+.welcome-icon{
+  width:64px;height:64px;border-radius:16px;margin:0 auto 18px;
+  background:linear-gradient(145deg,#1E2430,#12151D);
+  border:1px solid var(--hair-strong);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:20px;font-weight:700;color:var(--blue);
+  box-shadow:0 10px 30px rgba(0,0,0,.4);
+}
+.welcome-title{font-size:24px;font-weight:700;letter-spacing:-.03em;text-align:center;margin-bottom:6px}
+.welcome-sub{font-size:14px;color:var(--txt-2);text-align:center;margin-bottom:24px}
+.feat{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.feat-icon{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--blue-dim);
+}
+.feat-t{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.feat-d{font-size:12.5px;color:var(--txt-2);line-height:1.45}
+.welcome-btns{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.spot{
+  position:fixed;z-index:368;pointer-events:none;
+  border-radius:16px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,.74), 0 0 0 2px rgba(10,132,255,.6), 0 0 24px rgba(10,132,255,.35);
+  transition:all .5s cubic-bezier(.3,1.15,.35,1);
+  opacity:0;
+}
+.spot.show{opacity:1}
+.tut-card{
+  position:fixed;z-index:370;
+  width:calc(100% - 36px);max-width:340px;
+  background:var(--glass-strong);
+  -webkit-backdrop-filter:saturate(180%) blur(28px);backdrop-filter:saturate(180%) blur(28px);
+  border:1px solid var(--hair-strong);
+  border-radius:18px;padding:16px 18px 14px;
+  box-shadow:0 18px 50px rgba(0,0,0,.55);
+  opacity:0;transform:translateY(10px) scale(.96);
+  transition:opacity .3s,transform .4s cubic-bezier(.3,1.25,.4,1),top .5s cubic-bezier(.3,1.15,.35,1),left .5s cubic-bezier(.3,1.15,.35,1);
+  pointer-events:none;
+}
+.tut-card.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.tut-step{font-family:var(--mono);font-size:10.5px;color:var(--blue);font-weight:700;letter-spacing:.08em;margin-bottom:5px}
+.tut-title{font-size:16px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
+.tut-text{font-size:13px;color:var(--txt-2);line-height:1.5;margin-bottom:13px}
+.tut-foot{display:flex;align-items:center;justify-content:space-between}
+.tut-dots{display:flex;gap:5px}
+.tut-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.18);transition:background .3s,transform .3s}
+.tut-dot.on{background:var(--blue);transform:scale(1.25)}
+.tut-nav{display:flex;gap:8px}
+.tut-btn{
+  border:none;border-radius:9px;padding:8px 15px;
+  font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1);
+}
+.tut-btn:active{transform:scale(.93)}
+.tut-skip{background:transparent;color:var(--txt-2)}
+.tut-next{background:var(--blue);color:#fff}
+
+/* ---------- SIMULATOR ---------- */
+.sim-promo{
+  margin-top:18px;
+  border-radius:var(--r-lg);
+  background:linear-gradient(135deg, rgba(10,132,255,.14), rgba(191,90,242,.12));
+  border:1px solid rgba(10,132,255,.3);
+  padding:18px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;
+  transition:transform .2s cubic-bezier(.3,1.4,.5,1),border-color .2s;
+}
+.sim-promo:active{transform:scale(.98)}
+.sim-promo-icon{font-size:28px}
+.sim-promo-t{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.sim-promo-d{font-size:12.5px;color:var(--txt-2);margin-top:2px;line-height:1.4}
+.sim-promo-btn{
+  margin-left:auto;flex-shrink:0;
+  background:var(--blue);color:#fff;border:none;border-radius:11px;
+  padding:10px 16px;font-family:var(--sans);font-size:13.5px;font-weight:600;cursor:pointer;
+}
+.sim{
+  position:fixed;inset:0;z-index:300;
+  background:var(--bg);
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .55s cubic-bezier(.24,1.25,.32,1);
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 96px);
+}
+.sim.show{transform:translateY(0)}
+.sim-head{
+  position:sticky;top:0;z-index:5;
+  display:flex;align-items:center;gap:12px;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 18px 12px;
+  background:rgba(11,13,18,.82);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);
+  border-bottom:1px solid var(--hair);
+}
+.sim-close{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:rgba(255,255,255,.08);border:1px solid var(--hair-strong);
+  color:var(--txt);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.sim-title{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.sim-sub{font-size:11.5px;color:var(--txt-2)}
+.sim-body{max-width:620px;margin:0 auto;padding:18px}
+.scn{
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:16px;margin-bottom:12px;cursor:pointer;
+  display:flex;align-items:center;gap:13px;
+  transition:transform .2s cubic-bezier(.3,1.4,.5,1),border-color .2s;
+}
+.scn:active{transform:scale(.98)}
+.scn-info{flex:1;min-width:0}
+.scn-t{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.scn-d{font-size:12.5px;color:var(--txt-2);margin-top:2px;line-height:1.45}
+.scn-diff{font-size:10.5px;font-weight:700;letter-spacing:.05em;padding:4px 9px;border-radius:7px;flex-shrink:0}
+.sim-stage{display:none}
+.sim-stage.on{display:block}
+.sim-chart-card{
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:14px 14px 10px;margin-bottom:14px;
+}
+.sim-chart-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.sim-spread-now{font-family:var(--mono);font-size:30px;font-weight:600;letter-spacing:-.03em;color:var(--green)}
+.sim-clock{font-family:var(--mono);font-size:13px;color:var(--txt-2)}
+.sim-ctrl{display:flex;gap:8px;align-items:center;margin-top:10px}
+.sim-btn-ic{
+  width:40px;height:40px;border-radius:50%;border:1px solid var(--hair-strong);
+  background:rgba(255,255,255,.08);color:var(--txt);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1);
+}
+.sim-btn-ic:active{transform:scale(.9)}
+.sim-progress{flex:1;height:5px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.sim-progress-fill{height:100%;background:var(--blue);border-radius:99px;transition:width .2s linear}
+.sim-speed{
+  flex-shrink:0;border:1px solid var(--hair-strong);background:rgba(255,255,255,.08);
+  color:var(--txt);border-radius:99px;padding:8px 13px;
+  font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;
+}
+.sim-legend{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+  font-size:12px;color:var(--txt-2);padding-top:8px;
+}
+.sim-legend b{color:var(--txt);font-weight:600}
+.sim-legend i{
+  display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px;
+}
+.sim-leg{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);
+}
+.leg-side{font-size:12px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.leg-px{font-size:12px;color:var(--txt-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leg-pnl{font-size:13.5px;font-weight:600;white-space:nowrap}
+.sim-trade{
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:16px;margin-bottom:14px;
+}
+.sim-hint{font-size:13px;color:var(--txt-2);text-align:center;padding:6px 0 2px;line-height:1.5}
+.sim-pnl-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.sim-pnl-l{font-size:10.5px;color:var(--txt-2);margin-bottom:2px}
+.sim-pnl-v{font-family:var(--mono);font-size:16px;font-weight:600}
+.res-card{
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:22px;text-align:center;margin-bottom:14px;
+}
+.res-emoji{font-size:40px;margin-bottom:8px}
+.res-title{font-size:20px;font-weight:700;letter-spacing:-.02em;margin-bottom:4px}
+.res-sub{font-size:13px;color:var(--txt-2);line-height:1.5;margin-bottom:18px}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin-bottom:16px}
+.res-capture{margin-bottom:6px}
+.res-capture-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:8px}
+.res-capture-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--green));transition:width .8s cubic-bezier(.3,1,.4,1)}
+.res-capture-l{font-size:12px;color:var(--txt-2);margin-top:6px}
+
+/* ---------- BOTTOM NAV ---------- */
+.nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:350;
+  display:flex;justify-content:space-around;align-items:stretch;
+  background:rgba(11,13,18,.82);
+  -webkit-backdrop-filter:saturate(180%) blur(24px);backdrop-filter:saturate(180%) blur(24px);
+  border-top:1px solid var(--hair);
+  padding:6px 8px calc(env(safe-area-inset-bottom,0px) + 6px);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:5px 0;border:none;background:none;cursor:pointer;
+  color:var(--txt-2);font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.01em;
+  transition:color .2s,transform .15s cubic-bezier(.3,1.4,.5,1);
+}
+.nav-item:active{transform:scale(.92)}
+.nav-item.on{color:var(--blue)}
+.nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(min-width:1024px){
+  .nav{left:50%;right:auto;bottom:14px;transform:translateX(-50%);
+    border:1px solid var(--hair-strong);border-radius:20px;padding:6px 10px;min-width:420px;
+    box-shadow:0 14px 40px rgba(0,0,0,.5)}
+}
+
+/* ---------- TOAST ---------- */
+.toast{
+  position:fixed;top:calc(env(safe-area-inset-top,0px) + 64px);left:50%;transform:translateX(-50%) translateY(-12px);
+  z-index:400;max-width:calc(100% - 36px);
+  background:var(--glass-strong);border:1px solid var(--hair-strong);
+  -webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);
+  border-radius:13px;padding:11px 16px;
+  font-size:13px;color:var(--txt);text-align:center;
+  box-shadow:0 14px 40px rgba(0,0,0,.5);
+  opacity:0;pointer-events:none;
+  transition:opacity .25s,transform .35s cubic-bezier(.3,1.3,.4,1);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------- MODE BADGE ---------- */
+.live.demo{background:rgba(255,214,10,.12);border-color:rgba(255,214,10,.3);color:var(--yellow)}
+.live.demo .live-dot{background:var(--yellow);animation:none}
+.live.wait{background:var(--blue-dim);border-color:rgba(10,132,255,.3);color:var(--blue)}
+.live.wait .live-dot{background:var(--blue)}
+.live{cursor:pointer;user-select:none}
+
+/* ---------- ACADEMY ---------- */
+.acad{
+  position:fixed;inset:0;z-index:290;
+  background:var(--bg);overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .55s cubic-bezier(.24,1.25,.32,1);
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 90px);
+}
+.acad.show{transform:translateY(0)}
+.acad-body{max-width:620px;margin:0 auto;padding:18px}
+.gcard{
+  display:flex;align-items:center;gap:14px;
+  border-radius:var(--r-lg);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:16px;margin-bottom:12px;cursor:pointer;
+  transition:transform .2s cubic-bezier(.3,1.4,.5,1),border-color .2s;
+}
+.gcard:active{transform:scale(.98)}
+.gcard-icon{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;font-size:21px;
+  background:rgba(255,255,255,.06);border:1px solid var(--hair);
+  display:flex;align-items:center;justify-content:center;
+}
+.gcard-t{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.gcard-d{font-size:12.5px;color:var(--txt-2);margin-top:2px;line-height:1.45}
+.gcard-chev{margin-left:auto;color:var(--txt-2);font-size:14px}
+.art{display:none}
+.art.on{display:block}
+.acad-list.off{display:none}
+.art-back{
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:none;color:var(--blue);
+  font-family:var(--sans);font-size:15px;font-weight:600;cursor:pointer;
+  padding:0;margin-bottom:14px;
+}
+.art-h1{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-bottom:16px;line-height:1.2}
+.art-block{
+  border-radius:var(--r-md);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:15px 16px;margin-bottom:10px;
+}
+.art-h2{font-size:14.5px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px;color:var(--txt)}
+.art-p{font-size:13.5px;color:var(--txt-2);line-height:1.6}
+.art-p b{color:var(--txt);font-weight:600}
+.art-cta{
+  display:flex;gap:10px;margin-top:16px;
+}
+
+/* ---------- MARKETS (FX/STOCKS) ---------- */
+.mkt-grid{display:grid;gap:12px}
+@media(min-width:1024px){.mkt-grid{grid-template-columns:1fr 1fr}}
+.mkt-row{
+  display:grid;grid-template-columns:1fr 90px 64px;align-items:center;
+  padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.05);
+}
+.mkt-row:last-child{border-bottom:none}
+.mkt-name{font-size:13.5px;font-weight:600}
+.mkt-sub{font-size:10.5px;color:var(--txt-2)}
+.mkt-px{font-family:var(--mono);font-size:13.5px;font-weight:600;text-align:right}
+.mkt-chg{font-family:var(--mono);font-size:12px;font-weight:600;text-align:right}
+.mkt-key{padding:16px}
+.mkt-key input{
+  width:100%;box-sizing:border-box;margin:10px 0;
+  background:rgba(0,0,0,.35);border:1px solid var(--hair-strong);border-radius:10px;
+  color:var(--txt);font-family:var(--mono);font-size:13px;padding:10px 12px;outline:none;
+}
+.mkt-key input:focus{border-color:var(--blue)}
+
+/* ---------- WATCHLIST & ALERTS ---------- */
+.row-star{color:var(--yellow);font-size:12px;margin-left:2px}
+.btn.watch-on{background:rgba(255,214,10,.15);border:1px solid rgba(255,214,10,.35);color:var(--yellow)}
+.alert-on{background:rgba(191,90,242,.16)!important;border:1px solid rgba(191,90,242,.4)!important;color:#BF5AF2!important}
+
+/* ---------- ACTIVE TRADES STRIP ---------- */
+.atr-wrap{padding:14px 18px 0}
+.atr-title{font-size:13px;font-weight:700;letter-spacing:-.01em;color:var(--txt-2);margin-bottom:8px}
+.atr{display:flex;gap:10px;overflow-x:auto;margin:0 -18px;padding:0 18px 4px}
+.atr-card{
+  flex:0 0 218px;
+  border-radius:var(--r-md);
+  background:var(--glass);border:1px solid rgba(10,132,255,.3);
+  padding:12px 13px;
+}
+.atr-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.atr-pair{font-size:13.5px;font-weight:700}
+.atr-age{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--txt-2)}
+.atr-route{font-size:11px;color:var(--txt-2);margin-bottom:8px}
+.atr-bottom{display:flex;align-items:center;justify-content:space-between}
+.atr-pnl{font-family:var(--mono);font-size:15px;font-weight:600}
+.atr-close{
+  border:none;border-radius:8px;padding:6px 12px;cursor:pointer;
+  background:rgba(255,255,255,.1);color:var(--txt);
+  font-family:var(--sans);font-size:12px;font-weight:600;
+  transition:transform .15s cubic-bezier(.3,1.4,.5,1);
+}
+.atr-close:active{transform:scale(.92)}
+@media(min-width:1024px){
+  .atr-wrap{max-width:1180px;margin:0 auto;padding-left:32px;padding-right:32px}
+  .atr{margin:0 -32px;padding:0 32px 4px}
+}
+
+/* ---------- JOURNAL ---------- */
+.j-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.j-sec{font-size:15px;font-weight:700;letter-spacing:-.02em;margin:18px 0 10px}
+.j-row{
+  display:flex;align-items:center;gap:12px;
+  border-radius:var(--r-md);
+  background:var(--glass);border:1px solid var(--hair);
+  padding:12px 14px;margin-bottom:8px;
+}
+.j-info{flex:1;min-width:0}
+.j-pair{font-size:13.5px;font-weight:700}
+.j-meta{font-size:11px;color:var(--txt-2);margin-top:1px}
+.j-pnl{font-family:var(--mono);font-size:14.5px;font-weight:600;text-align:right;white-space:nowrap}
+.j-pnl small{display:block;font-size:10.5px;color:var(--txt-2);font-weight:400}
+.j-empty{
+  border-radius:var(--r-lg);border:1px dashed var(--hair-strong);
+  padding:28px 20px;text-align:center;color:var(--txt-2);font-size:13.5px;line-height:1.55;
+}
+
+/* ---------- DESKTOP ---------- */
+@media(min-width:1024px){
+  body{padding-bottom:40px}
+  .stats,.section{max-width:1180px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px}
+  .cards{margin:0 -32px;padding:2px 32px 6px}
+  .seg-wrap,.filters{margin-left:0;margin-right:0;padding:0}
+  .topbar{padding-left:32px;padding-right:32px}
+  .thead,.row{grid-template-columns:1.4fr 110px 110px 130px 90px}
+  .col-desk{display:block}
+  .sheet{
+    left:auto;right:0;top:0;bottom:0;width:480px;max-height:none;
+    border-radius:0;border:none;border-left:1px solid var(--hair-strong);
+    transform:translateX(105%);
+  }
+  .sheet.show{transform:translateX(0)}
+  .sheet-grab{display:none}
+  .sheet-in{padding:28px 28px 0}
+  .row:hover{background:rgba(255,255,255,.04)}
+  .card{flex:1 1 0}
+  .card:hover{border-color:var(--hair-strong);transform:translateY(-2px)}
+  .welcome{align-items:center}
+  .welcome-card{border-radius:28px;padding-bottom:30px;transform:translateY(20px) scale(.97)}
+  .welcome.show .welcome-card{transform:translateY(0) scale(1)}
+}
+@media(max-width:1023px){.col-desk{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">A/T</div>
+    <div class="logo-name">Arbitrage <span>Terminal</span></div>
+  </div>
+  <div class="live demo" id="modeBadge"><span class="live-dot"></span><span id="modeTxt">DEMO</span></div>
+  <div class="topbar-spacer"></div>
+  <div class="clock num" id="clock">--:--:--</div>
+  <div class="help-btn" id="langBtn" style="width:auto;padding:0 10px;border-radius:99px;font-size:11.5px;letter-spacing:.04em">EN</div>
+  <div class="help-btn" id="feeBtn" title="Fees">⚙</div>
+  <div class="help-btn" id="helpBtn" title="Tutorial">?</div>
+</header>
+
+<div class="stats" id="stats"></div>
+
+<div class="atr-wrap" id="atrWrap" style="display:none">
+  <div class="atr-title" id="atrTitle"></div>
+  <div class="atr" id="atr"></div>
+</div>
+
+<section class="section">
+  <div class="section-head">
+    <h2 class="section-title" id="tTop">Top opportunities</h2>
+    <span class="section-link" id="seeAll">See all</span>
+  </div>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <h2 class="section-title" id="tScan">Scanner</h2>
+    <span class="section-link" id="pauseBtn">Pause</span>
+  </div>
+
+  <div class="regime" id="regime"></div>
+
+  <div class="seg-wrap">
+    <div class="seg" id="seg">
+      <div class="seg-pill" id="segPill"></div>
+      <button data-f="all" class="on" id="segAll">All</button>
+      <button data-f="sf">Spot → Futures</button>
+      <button data-f="ff">Futures → Futures</button>
+      <button data-f="fund">Funding</button>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="chip" id="chipWatch">★</div>
+    <div class="chip" id="chipEx">Exchanges <span class="chev">▼</span></div>
+    <div class="chip" id="chipSpread">Min spread <span class="chev">▼</span></div>
+    <div class="chip" id="chipSort">Sort: Spread <span class="chev">▼</span></div>
+  </div>
+
+  <div class="table">
+    <div class="thead">
+      <div>INSTRUMENT · ROUTE</div>
+      <div class="r col-desk">FUNDING</div>
+      <div class="r col-desk">24H VOL</div>
+      <div class="r">SPREAD</div>
+      <div class="r">NET / RISK</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="exh" id="exh"></div>
+  <div class="sim-promo" id="simPromo">
+    <div class="sim-promo-icon">🎮</div>
+    <div>
+      <div class="sim-promo-t" id="simPromoT">Arbitrage Simulator</div>
+      <div class="sim-promo-d" id="simPromoD"></div>
+    </div>
+    <button class="sim-promo-btn" id="simPromoBtn"></button>
+  </div>
+</section>
+
+<section class="section" id="mktSection">
+  <div class="section-head">
+    <h2 class="section-title" id="mktTitle"></h2>
+    <span class="section-link" id="mktWhy"></span>
+  </div>
+  <div class="assist hold" style="margin-bottom:14px">
+    <span class="assist-s">🥇</span>
+    <span class="assist-t" id="goldNote"></span>
+  </div>
+  <div class="mkt-grid">
+    <div class="table">
+      <div class="thead" style="grid-template-columns:1fr 90px 64px">
+        <div id="fxTitle"></div><div class="r" id="fxRateL"></div><div class="r">7D</div>
+      </div>
+      <div id="fxRows"></div>
+    </div>
+    <div class="table">
+      <div class="thead" style="grid-template-columns:1fr 90px 64px">
+        <div id="stTitle"></div><div class="r" id="stPriceL"></div><div class="r">1D</div>
+      </div>
+      <div id="stRows"></div>
+    </div>
+  </div>
+  <div id="mktExplain" style="display:none;margin-top:12px"></div>
+</section>
+
+<div class="menu" id="menuEx">
+  <div class="menu-label">EXCHANGES</div>
+  <div class="menu-item sel" data-v="Binance"><span>Binance</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="Bybit"><span>Bybit</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="OKX"><span>OKX</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="Bitget"><span>Bitget</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="KuCoin"><span>KuCoin</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="Gate.io"><span>Gate.io</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="MEXC"><span>MEXC</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="Hyperliquid"><span>Hyperliquid</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="BingX"><span>BingX</span><span class="check">✓</span></div>
+  <div class="menu-item sel" data-v="Kraken"><span>Kraken</span><span class="check">✓</span></div>
+</div>
+
+<div class="menu" id="menuSpread">
+  <div class="menu-label">MINIMUM SPREAD</div>
+  <div class="menu-item sel" data-v="0"><span>Any</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.3"><span>≥ 0.30%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.5"><span>≥ 0.50%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.8"><span>≥ 0.80%</span><span class="check">✓</span></div>
+</div>
+
+<div class="menu" id="menuSort">
+  <div class="menu-label">SORT BY</div>
+  <div class="menu-item sel" data-v="spread"><span>Spread</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="net"><span>Net profit</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="vol"><span>Volume</span><span class="check">✓</span></div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" data-v="fresh"><span>Recently updated</span><span class="check">✓</span></div>
+</div>
+
+<div class="menu" id="menuLang" style="min-width:160px">
+  <div class="menu-item sel" data-v="en"><span>English</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="bg"><span>Български</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="ru"><span>Русский</span><span class="check">✓</span></div>
+</div>
+
+<div class="menu" id="menuFee" style="min-width:220px">
+  <div class="menu-label" id="feeMenuL"></div>
+  <div class="menu-item" data-v="0.02"><span>0.02%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.04"><span>0.04%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.05"><span>0.05%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.075"><span>0.075%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.1"><span>0.10%</span><span class="check">✓</span></div>
+</div>
+
+<div class="menu" id="menuAlert" style="min-width:190px">
+  <div class="menu-label" id="alertMenuL"></div>
+  <div class="menu-item" data-v="0.3"><span>≥ 0.30%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.5"><span>≥ 0.50%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="0.8"><span>≥ 0.80%</span><span class="check">✓</span></div>
+  <div class="menu-item" data-v="1.5"><span>≥ 1.50%</span><span class="check">✓</span></div>
+  <div class="menu-sep"></div>
+  <div class="menu-item" data-v="off"><span id="alertOffL"></span><span class="check">✓</span></div>
+</div>
+
+<div class="acad" id="jour">
+  <div class="sim-head">
+    <div class="sim-close" id="jourClose">✕</div>
+    <div>
+      <div class="sim-title" id="jourTitle"></div>
+      <div class="sim-sub" id="jourSub"></div>
+    </div>
+  </div>
+  <div class="acad-body" id="jourBody"></div>
+</div>
+
+<div class="sheet-backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grab" id="grab"></div>
+  <div class="sheet-in" id="sheetContent"></div>
+</div>
+
+
+<div class="sim" id="sim">
+  <div class="sim-head">
+    <div class="sim-close" id="simClose">✕</div>
+    <div>
+      <div class="sim-title" id="simTitle"></div>
+      <div class="sim-sub" id="simSub"></div>
+    </div>
+  </div>
+  <div class="sim-body">
+
+    <div class="sim-stage on" id="stScenarios"></div>
+
+    <div class="sim-stage" id="stPlay">
+      <div class="sim-chart-card">
+        <div class="sim-chart-top">
+          <span class="sim-spread-now" id="simSpreadNow">—</span>
+          <span class="sim-clock" id="simClock">00:00</span>
+        </div>
+        <canvas id="simChart" style="width:100%;height:180px"></canvas>
+        <div class="sim-legend">
+          <span><i style="background:var(--blue)"></i><b id="simLegA"></b> <span class="num" id="simPxA">—</span></span>
+          <span><i style="background:var(--red)"></i><b id="simLegB"></b> <span class="num" id="simPxB">—</span></span>
+        </div>
+        <div class="sim-ctrl">
+          <button class="sim-btn-ic" id="simPlayBtn">▶</button>
+          <div class="sim-progress"><div class="sim-progress-fill" id="simProg" style="width:0%"></div></div>
+          <button class="sim-speed" id="simSpeedBtn">1×</button>
+        </div>
+      </div>
+      <div class="sim-trade" id="simTrade"></div>
+    </div>
+
+    <div class="sim-stage" id="stResult"></div>
+
+  </div>
+</div>
+
+
+<div class="acad" id="acad">
+  <div class="sim-head">
+    <div class="sim-close" id="acadClose">✕</div>
+    <div>
+      <div class="sim-title" id="acadTitle"></div>
+      <div class="sim-sub" id="acadSub"></div>
+    </div>
+  </div>
+  <div class="acad-body">
+    <div class="acad-list" id="acadList"></div>
+    <div class="art" id="acadArt"></div>
+  </div>
+</div>
+
+<nav class="nav" id="nav">
+  <button class="nav-item on" data-nav="home">
+    <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+    <span id="navHomeL"></span>
+  </button>
+  <button class="nav-item" data-nav="scan">
+    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2.5"/></svg>
+    <span id="navScanL"></span>
+  </button>
+  <button class="nav-item" data-nav="sim">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/></svg>
+    <span id="navSimL"></span>
+  </button>
+  <button class="nav-item" data-nav="jour">
+    <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>
+    <span id="navJourL"></span>
+  </button>
+  <button class="nav-item" data-nav="acad">
+    <svg viewBox="0 0 24 24"><path d="M4 5h7a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4z"/><path d="M20 5h-7a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h7z"/></svg>
+    <span id="navAcadL"></span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="welcome" id="welcome">
+  <div class="welcome-card">
+    <div class="welcome-icon">A/T</div>
+    <div class="welcome-title" id="wTitle">Welcome to Arbitrage Terminal</div>
+    <div class="welcome-sub" id="wSub">Find, analyze and manage arbitrage trades across 8 exchanges</div>
+    <div class="feat">
+      <div class="feat-icon">📡</div>
+      <div><div class="feat-t" id="f1t">Live Scanner</div><div class="feat-d" id="f1d">Spot → Futures, cross-exchange and funding opportunities, updated in real time.</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🤖</div>
+      <div><div class="feat-t" id="f2t">Trade Assistant</div><div class="feat-d" id="f2d">Explains every opportunity and tells you when to hold or exit.</div></div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🧭</div>
+      <div><div class="feat-t" id="f3t">Execution Guide</div><div class="feat-d" id="f3d">Step-by-step instructions, profit calculator and risk analysis for each trade.</div></div>
+    </div>
+    <div class="welcome-btns">
+      <button class="btn btn-pri" id="tourStart">Take the tour</button>
+      <button class="btn btn-sec" id="tourSkip">Explore on my own</button>
+    </div>
+  </div>
+</div>
+
+<div class="spot" id="spot"></div>
+<div class="tut-card" id="tutCard">
+  <div class="tut-step" id="tutStep"></div>
+  <div class="tut-title" id="tutTitle"></div>
+  <div class="tut-text" id="tutText"></div>
+  <div class="tut-foot">
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-nav">
+      <button class="tut-btn tut-skip" id="tutEnd">Skip</button>
+      <button class="tut-btn tut-next" id="tutNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= DATA ================= */
+const COINS = {
+  BTC:{c:"#F7931A"}, ETH:{c:"#627EEA"}, SOL:{c:"#9945FF"}, XRP:{c:"#00AAE4"},
+  DOGE:{c:"#C2A633"}, AVAX:{c:"#E84142"}, LINK:{c:"#2A5ADA"}, TON:{c:"#0098EA"},
+  SUI:{c:"#4DA2FF"}, APT:{c:"#06C1A8"}, ARB:{c:"#28A0F0"}, PEPE:{c:"#3D8130"},
+  WIF:{c:"#B08968"}, INJ:{c:"#17BBF5"}, SEI:{c:"#9E1F19"}, TIA:{c:"#7B2BF9"},
+  PAXG:{c:"#E6C15A"}, XAUT:{c:"#D4AF37"}
+};
+const EXCH = ["Binance","Bybit","OKX","Bitget","KuCoin","Gate.io","MEXC","Hyperliquid","BingX","Kraken"];
+const STRATS = {
+  sf:{label:"SPOT → FUT", cls:"tag-sf", dot:"#0A84FF"},
+  ff:{label:"FUT → FUT", cls:"tag-ff", dot:"#FFD60A"},
+  fund:{label:"FUNDING", cls:"tag-fund", dot:"#BF5AF2"}
+};
+
+/* ================= I18N ================= */
+const I18N = {
+en:{
+  opportunities:"Opportunities", strategies3:"3 strategies", bestRoi:"Best net ROI", afterFees:"after fees",
+  avgSpread:"Avg spread", acrossMkts:"across markets", avgFunding:"Avg funding", rate8h:"8h rate",
+  exchanges:"Exchanges", online:"online", allConn:"all connected",
+  topOpp:"Top opportunities", seeAll:"See all", scanner:"Scanner", pause:"Pause", resume:"Resume", all:"All",
+  chipEx:"Exchanges", chipSpread:"Min spread", chipSort:"Sort: ", spreadGe:"Spread ≥ {v}%",
+  mExch:"EXCHANGES", mMinSpread:"MINIMUM SPREAD", mSortBy:"SORT BY", any:"Any",
+  sortSpread:"Spread", sortNet:"Net profit", sortVol:"Volume", sortFresh:"Recently updated",
+  thInstr:"INSTRUMENT · ROUTE", thFunding:"FUNDING", thVol:"24H VOL", thSpread:"SPREAD", thNet:"NET / RISK",
+  rMarket:"MARKET", trending:"Trending", rFunding:"FUNDING", positive:"Positive", negative:"Negative",
+  rVol:"VOLATILITY", high:"High", rQuality:"ARB QUALITY", qEx:"Excellent", qGood:"Good", qFair:"Fair", rNext:"NEXT FUNDING",
+  life:"~{n}m life", rsLow:"Low", rsMed:"Med", rsHigh:"High", rfLow:"Low", rfMed:"Medium", rfHigh:"High",
+  bestNow:"🔥 BEST NOW", net:"net",
+  buySell:"Buy on <b>{a}</b> → Sell on <b>{b}</b>", spreadNet:"spread · net",
+  appeared:"Appeared <b>{a} ago</b> · avg lifetime of similar spreads <b>~{n} min</b>",
+  hold:"🟢 Hold", assist:"Spread is stable and liquidity is <b>{liq}</b>. {fund} No exit signal yet.",
+  fundPos:"Funding works in your favor.", fundNeg:"Funding is slightly negative.",
+  liqHigh:"high", liqMedium:"medium", liqLow:"low",
+  confidence:"Confidence", execution:"Execution", easy:"Easy", medium:"Medium", hard:"Hard",
+  funding8:"Funding (8h)", fees:"Total fees", vol24:"24h volume", risk:"Risk",
+  deposit:"Deposit, USDT", gross:"GROSS", feesU:"FEES", netProfitU:"NET PROFIT",
+  guide:"Execution guide", watchlist:"☆ Watchlist", alert:"Set alert",
+  s1:"Buy {coin} on {ex}", s1subSpot:"Spot market, limit order near best bid", s1subPerp:"Long perp position",
+  s2:"Open short on {ex}", s2sub:"Same size, isolated margin recommended",
+  s3:"Verify both fills", s3sub:"Check executed size and entry prices match",
+  s4:"Monitor spread convergence", s4sub:"Assistant will signal when to exit",
+  s5:"Close both legs", s5sub:"Exit when spread ≤ fees or on 🔴 signal",
+  wTitle:"Welcome to Arbitrage Terminal", wSub:"Find, analyze and manage arbitrage trades across 8 exchanges",
+  f1t:"Live Scanner", f1d:"Spot → Futures, cross-exchange and funding opportunities, updated in real time.",
+  f2t:"Trade Assistant", f2d:"Explains every opportunity and tells you when to hold or exit.",
+  f3t:"Execution Guide", f3d:"Step-by-step instructions, profit calculator and risk analysis for each trade.",
+  takeTour:"Take the tour", explore:"Explore on my own",
+  skip:"Skip", next:"Next", done:"Done", stepOf:"STEP {i} OF {n}",
+  simPromoT:"Arbitrage Simulator", simPromoD:"Practice on recorded market data — open a virtual trade and beat the market.", simPromoBtn:"Play",
+  simPick:"Choose a scenario", simSubPick:"Recorded market sessions",
+  scn1t:"Morning funding play", scn1d:"BTC, calm market. The spread builds slowly before the funding payment. A forgiving start.",
+  scn2t:"SOL cross-exchange squeeze", scn2d:"A liquidity gap opens between two exchanges. The window is decent but doesn't last.",
+  scn3t:"PEPE listing madness", scn3d:"A fresh listing. The spread explodes and dies within minutes. Blink and you miss it.",
+  simWait:"Press play and watch both prices. Opening the trade goes LONG on {a} and SHORT on {b} at the same time — then you wait for the prices to converge.", netPnl:"NET P&L",
+  simOpen:"Open both legs", simCloseTrade:"Close both legs", simDeposit:"Deposit, USDT",
+  simEntry:"ENTRY", simNow:"NOW", simPnl:"P&L",
+  simEnded:"Session ended", simMissed:"The opportunity came and went — you never entered. It happens to everyone once.",
+  resYour:"Your result", resBest:"Best possible", resCapture:"You captured {p}% of the maximum",
+  vGreat:"Excellent execution!", vGreatD:"You read the spread almost perfectly. This is exactly how arbitrage should feel.",
+  vGood:"Solid trade", vGoodD:"You caught a good part of the move. With a slightly later entry or earlier exit it would be perfect.",
+  vOk:"Profit is profit", vOkD:"You left money on the table, but you closed green. Watch the spread peak next time.",
+  vBad:"The market won this round", vBadD:"You entered too late or held too long. Replay the scenario and watch where the spread peaked.",
+  simAgain:"Replay", simNewScn:"New scenario",
+  navHome:"Terminal",
+  navScan:"Scanner",
+  navSim:"Simulator",
+  navAcad:"Academy",
+  acadTitle:"Academy",
+  acadSub:"Guides for arbitrage trading",
+  acadBack:"Academy",
+  modeDemo:"DEMO",
+  modeLive:"LIVE",
+  modeWait:"CONNECTING",
+  liveOk:"Live data connected: real prices from the exchanges",
+  liveFail:"Couldn't reach exchange APIs — staying on demo data",
+  liveOff:"Switched back to demo data",
+  appearedLive:"Appeared <b>{a} ago</b> · live exchange data",
+  acadOpenSim:"Practice in Simulator",
+  acadOpenScan:"Open Scanner",
+  acad:[{"i": "💡", "t": "What is arbitrage", "d": "The core idea in 3 minutes", "b": [["One coin, two prices", "The same coin often trades at slightly different prices on different exchanges. BTC can cost 64,200 on Binance and 64,500 on Bybit at the same moment. That gap is called the <b>spread</b>."], ["Why prices diverge", "Each exchange has its own buyers and sellers. News, large orders, listings and thin liquidity push prices apart for seconds or minutes until traders pull them back together."], ["How you earn", "You buy where it's cheap and sell where it's expensive at the same time. When the prices converge, you close both sides and keep the difference."], ["Market-neutral", "You hold a long and a short simultaneously, so it doesn't matter if the market goes up or down. Your profit depends only on the gap closing."], ["The only formula", "<b>Profit = spread − fees</b>. If the spread is 0.8% and both legs cost 0.2% in fees, you keep 0.6%. If fees are bigger than the spread — the trade makes no sense."]]}, {"i": "📘", "t": "How to open a futures trade", "d": "Perpetuals, margin, leverage — step by step", "b": [["What is a perpetual", "A perpetual (perp) is a futures contract with no expiry date. Its price follows the spot price of the coin. This is the main instrument for arbitrage because you can short it easily."], ["Long and short", "<b>Long</b> = you profit when the price goes up. <b>Short</b> = you profit when the price goes down. In arbitrage you almost always hold one of each on different venues."], ["Margin mode: choose Isolated", "Exchanges offer Cross and Isolated margin. For arbitrage always pick <b>Isolated</b> — a problem in one position can never touch the rest of your account."], ["Leverage: keep it 1–3×", "Leverage multiplies both position size and risk. Arbitrage profits come from small spreads, not from leverage. <b>1× is safest</b>; never go above 3× while learning."], ["Step by step", "1. Transfer USDT to the Futures wallet. 2. Open the pair, e.g. BTCUSDT Perpetual. 3. Set Isolated, 1×. 4. Choose Limit order and set your price. 5. After the fill, check position size and entry price."], ["About liquidation", "Liquidation happens when losses eat your margin. At 1× on an isolated position the price would need to move ~100% against you — practically impossible in an arbitrage hold of minutes or hours."]]}, {"i": "🔵", "t": "Spot → Futures strategy", "d": "The classic delta-neutral trade", "b": [["The setup", "Buy the coin on the spot market and open a short perp of the same size. Your position is fully hedged: the coin can go anywhere, your PnL stays flat."], ["What you earn", "Two sources: the <b>basis</b> (futures usually trade slightly above spot, and that premium decays toward zero) and <b>funding</b> — periodic payments that shorts receive when funding is positive."], ["Steps", "1. Buy X coins on spot. 2. Short exactly X on the perp, Isolated 1×. 3. Verify both fills match. 4. Hold and collect funding. 5. Close both legs together when the basis has compressed."], ["When to exit", "Exit when the basis is near zero, when funding turns negative for several intervals, or when your target profit is reached. Always close both legs at the same time."]]}, {"i": "🟡", "t": "Futures → Futures strategy", "d": "Cross-exchange convergence", "b": [["The setup", "The same perp trades at different prices on two exchanges. Go <b>long on the cheaper</b> exchange and <b>short on the more expensive</b> one, same size."], ["Waiting for convergence", "Both prices move with the market — that's fine. You only care about the gap. When it shrinks, the long leg and short leg together lock in the difference."], ["Count fees on both legs", "You pay entry and exit fees on two exchanges — four fills total. A 0.5% spread with 0.4% total fees leaves only 0.1%. Check the math before entering, not after."], ["Main risk", "The spread can widen before it converges. That's a temporary paper loss. Size positions so you can hold calmly, and set a time limit — if it hasn't converged in your window, close and move on."]]}, {"i": "⚡", "t": "Funding arbitrage", "d": "Getting paid every 8 hours", "b": [["What funding is", "Perpetuals stay near spot thanks to funding: every 8 hours longs and shorts exchange a small payment. Positive funding → longs pay shorts. Negative → shorts pay longs."], ["The strategy", "When funding is strongly positive: buy spot + short the perp. Your position is neutral, and every 8 hours the short collects the funding payment."], ["What to watch", "Funding is not fixed — it's recalculated continuously. The countdown timer in the terminal shows the next payment. If predicted funding flips negative, the trade loses its engine."], ["Realistic numbers", "Typical funding is 0.01% per 8h (~11% APR). During hot markets it can hit 0.1%+ per interval on some coins — that's when this strategy shines."]]}, {"i": "🛡️", "t": "Risk management", "d": "How not to give profits back", "b": [["Slippage", "Your order fills at a worse price than the screen showed — common in thin books. Prefer limit orders and liquid pairs. The Scanner's liquidity column exists exactly for this."], ["Both-legs rule", "An arbitrage position is one trade with two legs. Never leave one leg open alone \"for a bit\" — that's not arbitrage anymore, that's a naked directional bet."], ["Position sizing", "Risk a small share of the account per trade — 5–10% while learning. Many small consistent spreads beat one oversized trade that traps you."], ["Time stop", "Decide before entry how long you're willing to hold. Spread hasn't converged in your window? Close, accept the small cost, and take the next opportunity."], ["Fees first", "Before every entry ask one question: does the spread cover all four fills plus slippage? If the answer isn't a clear yes — skip. Skipping is free."]]}],
+  chipWatchT:"★ Watchlist",
+  watchAdd:"☆ Watchlist",
+  watchOn:"★ In watchlist",
+  alertBtn:"Set alert",
+  alertAt:"🔔 ≥ {v}%",
+  alertMenu:"ALERT WHEN SPREAD ≥",
+  alertOffOpt:"Remove alert",
+  alertSetT:"Alert set: {coin} spread ≥ {v}%",
+  alertFired:"🔔 {coin} {a} → {b}: spread hit {v}%",
+  slip:"Slippage",
+  slipEst:"estimating…",
+  slipNA:"n/a",
+  slipFor:"for {d} USDT",
+  navJour:"Journal",
+  jTitle:"Trade Journal",
+  jSub:"Tracked trades and results",
+  jTrack:"📌 Track this trade",
+  jTracking:"📌 Tracking",
+  jActiveT:"Active trades",
+  jClosedT:"Closed trades",
+  jClose:"Close",
+  jEmpty:"Track a trade from its card — entry, timing and result will appear here.",
+  jPnl:"Total PnL",
+  jWinrate:"Win rate",
+  jTrades:"Trades",
+  jAvg:"Avg ROI",
+  jTracked:"Trade added to journal",
+  jClosedMsg:"Trade closed: {p}",
+  atrTitle:"📌 Active trades",
+  feeMenu:"TAKER FEE PER LEG",
+  feeChanged:"Fees updated: {v}% per leg · {r}% round-trip",
+  buySellPx:"Buy on <b>{a}</b> @ {pa} → Sell on <b>{b}</b> @ {pb}",
+  execNote:"Executable spread: best bid/ask, not last price",
+  mktTitle:"Forex & Stocks",
+  mktWhy:"Why is this a monitor?",
+  goldNote:"Real gold arbitrage is already in the Scanner: tokenized gold <b>PAXG</b> and <b>XAUT</b> trade across the same crypto exchanges — cross-exchange spreads on them are catchable with the same two-leg mechanics.",
+  fxTitle:"FOREX",
+  fxRateL:"RATE",
+  fxSub:"ECB reference · daily",
+  stTitle:"STOCKS",
+  stPriceL:"PRICE",
+  stNeedKey:"Live stock quotes need a free Finnhub API key (60 req/min, no card).",
+  stGet:"Get one at finnhub.io → paste below:",
+  stSave:"Connect",
+  stBad:"Key didn't work — check and try again",
+  mktOffline:"Rates unavailable — check connection",
+  exp1h:"Why monitor, not scanner",
+  exp1p:"Stocks trade on one centralized exchange per listing — between brokers there is one national best price, nothing to arbitrage. Interbank forex is efficient to the 4th decimal, and retail brokers ban cross-broker arbitrage. There is no two-leg long/short mechanic here for a retail trader like there is in crypto perps.",
+  exp2h:"Where cross-market money does exist",
+  exp2p:"Tokenized assets on crypto rails: gold (PAXG, XAUT) — already in your Scanner; plus funding on gold perps. This section keeps FX and stock context in front of you so you see the macro picture your spreads live in.",
+  tour:[
+    {t:"Market at a glance", d:"Live totals: how many opportunities exist right now, the best net ROI after fees, average spread and funding across all exchanges."},
+    {t:"Market Regime", d:"Current market conditions and how favorable they are for arbitrage — plus a countdown to the next funding payment."},
+    {t:"Top opportunities", d:"The best trade in each strategy right now. Tap any card to open full trade details."},
+    {t:"Strategies", d:"Switch between Spot → Futures, cross-exchange Futures → Futures and Funding rate arbitrage. \"All\" shows everything."},
+    {t:"Smart filters", d:"Pick exchanges, set a minimum spread and change sorting. Filters work instantly on the live table."},
+    {t:"Reading a row", d:"Each row shows the route, live spread with green/red flashes, how long the spread has existed and net profit with a risk score. Tap a row to analyze the trade."},
+    {t:"Trade Assistant", d:"The assistant watches every trade: 🟢 hold, 🟡 prepare to exit, 🔴 close now — and explains why."},
+    {t:"Profit Calculator", d:"Enter your deposit — gross profit, fees and net result update instantly. Below it: a step-by-step execution guide for the whole trade."}
+  ]
+},
+ru:{
+  opportunities:"Возможности", strategies3:"3 стратегии", bestRoi:"Лучший чистый ROI", afterFees:"после комиссий",
+  avgSpread:"Средний спред", acrossMkts:"по всем рынкам", avgFunding:"Средний funding", rate8h:"ставка за 8ч",
+  exchanges:"Биржи", online:"онлайн", allConn:"все подключены",
+  topOpp:"Лучшие возможности", seeAll:"Все", scanner:"Сканер", pause:"Пауза", resume:"Продолжить", all:"Все",
+  chipEx:"Биржи", chipSpread:"Мин. спред", chipSort:"Сорт.: ", spreadGe:"Спред ≥ {v}%",
+  mExch:"БИРЖИ", mMinSpread:"МИНИМАЛЬНЫЙ СПРЕД", mSortBy:"СОРТИРОВКА", any:"Любой",
+  sortSpread:"Спред", sortNet:"Чистая прибыль", sortVol:"Объём", sortFresh:"Недавно обновлённые",
+  thInstr:"ИНСТРУМЕНТ · МАРШРУТ", thFunding:"FUNDING", thVol:"ОБЪЁМ 24Ч", thSpread:"СПРЕД", thNet:"ЧИСТО / РИСК",
+  rMarket:"РЫНОК", trending:"Тренд", rFunding:"FUNDING", positive:"Положит.", negative:"Отрицат.",
+  rVol:"ВОЛАТИЛЬНОСТЬ", high:"Высокая", rQuality:"КАЧЕСТВО АРБ.", qEx:"Отличное", qGood:"Хорошее", qFair:"Среднее", rNext:"ДО FUNDING",
+  life:"~{n}м жизни", rsLow:"Низкий", rsMed:"Сред.", rsHigh:"Высокий", rfLow:"Низкий", rfMed:"Средний", rfHigh:"Высокий",
+  bestNow:"🔥 ЛУЧШАЯ СЕЙЧАС", net:"чисто",
+  buySell:"Купить на <b>{a}</b> → Продать на <b>{b}</b>", spreadNet:"спред · чисто",
+  appeared:"Появился <b>{a} назад</b> · среднее время жизни таких спредов <b>~{n} мин</b>",
+  hold:"🟢 Держать", assist:"Спред стабилен, ликвидность — <b>{liq}</b>. {fund} Сигнала на выход пока нет.",
+  fundPos:"Funding работает в вашу пользу.", fundNeg:"Funding слегка отрицательный.",
+  liqHigh:"высокая", liqMedium:"средняя", liqLow:"низкая",
+  confidence:"Уверенность", execution:"Сложность", easy:"Легко", medium:"Средне", hard:"Сложно",
+  funding8:"Funding (8ч)", fees:"Комиссии", vol24:"Объём 24ч", risk:"Риск",
+  deposit:"Депозит, USDT", gross:"ВАЛОВАЯ", feesU:"КОМИССИИ", netProfitU:"ЧИСТАЯ ПРИБЫЛЬ",
+  guide:"Пошаговый план", watchlist:"☆ В избранное", alert:"Создать алерт",
+  s1:"Купить {coin} на {ex}", s1subSpot:"Спот, лимитный ордер у лучшего бида", s1subPerp:"Лонг по перпетуалу",
+  s2:"Открыть шорт на {ex}", s2sub:"Тот же объём, изолированная маржа",
+  s3:"Проверить исполнение", s3sub:"Сверить объёмы и цены входа",
+  s4:"Следить за схождением спреда", s4sub:"Assistant подскажет момент выхода",
+  s5:"Закрыть обе позиции", s5sub:"Выход при спреде ≤ комиссий или по сигналу 🔴",
+  wTitle:"Добро пожаловать в Arbitrage Terminal", wSub:"Поиск, анализ и сопровождение арбитражных сделок на 8 биржах",
+  f1t:"Живой сканер", f1d:"Spot → Futures, межбиржевые и funding-возможности в реальном времени.",
+  f2t:"Trade Assistant", f2d:"Объясняет каждую возможность и подсказывает, когда держать или выходить.",
+  f3t:"Execution Guide", f3d:"Пошаговые инструкции, калькулятор прибыли и анализ риска для каждой сделки.",
+  takeTour:"Пройти тур", explore:"Разберусь сам",
+  skip:"Пропустить", next:"Далее", done:"Готово", stepOf:"ШАГ {i} ИЗ {n}",
+  simPromoT:"Арбитражный симулятор", simPromoD:"Практикуйтесь на записанных данных рынка — откройте виртуальную сделку и обыграйте рынок.", simPromoBtn:"Играть",
+  simPick:"Выберите сценарий", simSubPick:"Записанные рыночные сессии",
+  scn1t:"Утренняя funding-игра", scn1d:"BTC, спокойный рынок. Спред медленно растёт перед выплатой funding. Мягкий старт.",
+  scn2t:"Сжатие SOL между биржами", scn2d:"Между двумя биржами открывается разрыв ликвидности. Окно приличное, но недолгое.",
+  scn3t:"Безумие листинга PEPE", scn3d:"Свежий листинг. Спред взлетает и умирает за минуты. Моргнул — и всё.",
+  simWait:"Нажмите play и следите за обеими ценами. Открытие сделки — это одновременно ЛОНГ на {a} и ШОРТ на {b}. Дальше ждёте схождения цен.", netPnl:"ЧИСТЫЙ P&L",
+  simOpen:"Открыть обе ноги", simCloseTrade:"Закрыть обе ноги", simDeposit:"Депозит, USDT",
+  simEntry:"ВХОД", simNow:"СЕЙЧАС", simPnl:"P&L",
+  simEnded:"Сессия завершена", simMissed:"Возможность пришла и ушла — вы так и не вошли. С каждым бывает.",
+  resYour:"Ваш результат", resBest:"Максимум возможного", resCapture:"Вы забрали {p}% от максимума",
+  vGreat:"Отличное исполнение!", vGreatD:"Вы прочитали спред почти идеально. Именно так и должен ощущаться арбитраж.",
+  vGood:"Крепкая сделка", vGoodD:"Вы взяли хорошую часть движения. Чуть позже вход или раньше выход — и было бы идеально.",
+  vOk:"Прибыль есть прибыль", vOkD:"Часть денег осталась на столе, но вы закрылись в плюс. В следующий раз следите за пиком спреда.",
+  vBad:"Рынок выиграл этот раунд", vBadD:"Вы вошли слишком поздно или держали слишком долго. Переиграйте сценарий и посмотрите, где был пик.",
+  simAgain:"Переиграть", simNewScn:"Новый сценарий",
+  navHome:"Терминал",
+  navScan:"Сканер",
+  navSim:"Симулятор",
+  navAcad:"Академия",
+  acadTitle:"Академия",
+  acadSub:"Гайды по арбитражной торговле",
+  acadBack:"Академия",
+  modeDemo:"ДЕМО",
+  modeLive:"LIVE",
+  modeWait:"СОЕДИНЕНИЕ",
+  liveOk:"Живые данные подключены: реальные цены с бирж",
+  liveFail:"Не удалось подключиться к API бирж — остаёмся на демо-данных",
+  liveOff:"Переключились обратно на демо-данные",
+  appearedLive:"Появился <b>{a} назад</b> · живые данные биржи",
+  acadOpenSim:"Практика в симуляторе",
+  acadOpenScan:"Открыть сканер",
+  acad:[{"i": "💡", "t": "Что такое арбитраж", "d": "Суть за 3 минуты", "b": [["Одна монета — две цены", "Одна и та же монета часто стоит по-разному на разных биржах. BTC может стоить 64 200 на Binance и 64 500 на Bybit в один момент. Эта разница называется <b>спред</b>."], ["Почему цены расходятся", "У каждой биржи свои покупатели и продавцы. Новости, крупные ордера, листинги и тонкая ликвидность разводят цены на секунды или минуты, пока трейдеры не стянут их обратно."], ["Как вы зарабатываете", "Вы одновременно покупаете там, где дёшево, и продаёте там, где дорого. Когда цены сходятся, вы закрываете обе стороны и забираете разницу."], ["Рыночная нейтральность", "Вы держите лонг и шорт одновременно, поэтому неважно, растёт рынок или падает. Прибыль зависит только от схождения разрыва."], ["Единственная формула", "<b>Прибыль = спред − комиссии</b>. Если спред 0.8%, а обе ноги стоят 0.2% комиссий, вы забираете 0.6%. Если комиссии больше спреда — сделка не имеет смысла."]]}, {"i": "📘", "t": "Как открыть фьючерсную сделку", "d": "Перпетуалы, маржа, плечо — по шагам", "b": [["Что такое перпетуал", "Перпетуал (перп) — фьючерсный контракт без даты экспирации. Его цена следует за спотовой ценой монеты. Это главный инструмент арбитража, потому что его легко шортить."], ["Лонг и шорт", "<b>Лонг</b> — вы зарабатываете при росте цены. <b>Шорт</b> — при падении. В арбитраже вы почти всегда держите по одному на разных площадках."], ["Режим маржи: выбирайте Isolated", "Биржи предлагают Cross и Isolated. Для арбитража всегда <b>Isolated</b> — проблема в одной позиции никогда не заденет остальной счёт."], ["Плечо: держите 1–3×", "Плечо умножает и размер позиции, и риск. Прибыль арбитража — из маленьких спредов, а не из плеча. <b>1× безопаснее всего</b>; выше 3× не поднимайтесь, пока учитесь."], ["По шагам", "1. Переведите USDT на фьючерсный кошелёк. 2. Откройте пару, например BTCUSDT Perpetual. 3. Поставьте Isolated, 1×. 4. Выберите Limit-ордер и укажите цену. 5. После исполнения проверьте размер позиции и цену входа."], ["Про ликвидацию", "Ликвидация — когда убыток съедает вашу маржу. При 1× на изолированной позиции цена должна пройти ~100% против вас — практически невозможно за минуты или часы арбитражного удержания."]]}, {"i": "🔵", "t": "Стратегия Spot → Futures", "d": "Классическая дельта-нейтральная сделка", "b": [["Схема", "Покупаете монету на споте и открываете шорт перпа того же размера. Позиция полностью захеджирована: монета может идти куда угодно, ваш PnL стоит на месте."], ["На чём заработок", "Два источника: <b>базис</b> (фьючерс обычно торгуется чуть выше спота, и эта премия сжимается к нулю) и <b>funding</b> — периодические выплаты, которые получают шорты при положительном funding."], ["Шаги", "1. Купите X монет на споте. 2. Зашортите ровно X на перпе, Isolated 1×. 3. Сверьте исполнение обеих ног. 4. Держите и собирайте funding. 5. Закройте обе ноги вместе, когда базис сжался."], ["Когда выходить", "Выходите, когда базис около нуля, когда funding несколько интервалов подряд отрицательный, или при достижении цели по прибыли. Обе ноги всегда закрывайте одновременно."]]}, {"i": "🟡", "t": "Стратегия Futures → Futures", "d": "Межбиржевое схождение", "b": [["Схема", "Один и тот же перп стоит по-разному на двух биржах. <b>Лонг на дешёвой</b> бирже, <b>шорт на дорогой</b>, одинаковый размер."], ["Ожидание схождения", "Обе цены двигаются вместе с рынком — это нормально. Вас волнует только разрыв. Когда он сжимается, лонг и шорт вместе фиксируют разницу."], ["Считайте комиссии обеих ног", "Вы платите за вход и выход на двух биржах — четыре исполнения. Спред 0.5% при суммарных комиссиях 0.4% оставляет всего 0.1%. Считайте до входа, а не после."], ["Главный риск", "Спред может расшириться до того, как сойдётся. Это временный бумажный убыток. Берите такой размер, чтобы спокойно держать, и ставьте лимит по времени — не сошлось за ваше окно, закрывайте и идите дальше."]]}, {"i": "⚡", "t": "Funding-арбитраж", "d": "Выплаты каждые 8 часов", "b": [["Что такое funding", "Перпетуалы держатся у спота благодаря funding: каждые 8 часов лонги и шорты обмениваются небольшим платежом. Положительный funding → лонги платят шортам. Отрицательный → наоборот."], ["Стратегия", "Когда funding сильно положительный: покупка спота + шорт перпа. Позиция нейтральна, и каждые 8 часов шорт получает funding-платёж."], ["За чем следить", "Funding не фиксирован — он пересчитывается постоянно. Таймер в терминале показывает следующую выплату. Если прогнозный funding уходит в минус, у сделки пропадает двигатель."], ["Реалистичные цифры", "Типичный funding — 0.01% за 8ч (~11% годовых). На горячем рынке по отдельным монетам бывает 0.1%+ за интервал — тогда эта стратегия раскрывается по-настоящему."]]}, {"i": "🛡️", "t": "Управление рисками", "d": "Как не отдать прибыль обратно", "b": [["Проскальзывание", "Ордер исполняется по цене хуже, чем на экране — обычное дело в тонких стаканах. Предпочитайте лимитные ордера и ликвидные пары. Колонка ликвидности в сканере существует именно для этого."], ["Правило двух ног", "Арбитражная позиция — одна сделка из двух ног. Никогда не оставляйте одну ногу открытой «ненадолго» — это уже не арбитраж, а голая направленная ставка."], ["Размер позиции", "Рискуйте малой долей счёта на сделку — 5–10%, пока учитесь. Много маленьких стабильных спредов лучше одной раздутой сделки, которая вас запрёт."], ["Стоп по времени", "До входа решите, сколько готовы держать. Спред не сошёлся за ваше окно? Закрывайте, принимайте маленькую цену вопроса и берите следующую возможность."], ["Сначала комиссии", "Перед каждым входом один вопрос: покрывает ли спред все четыре исполнения плюс проскальзывание? Если ответ не однозначное «да» — пропускайте. Пропуск бесплатен."]]}],
+  chipWatchT:"★ Избранное",
+  watchAdd:"☆ В избранное",
+  watchOn:"★ В избранном",
+  alertBtn:"Создать алерт",
+  alertAt:"🔔 ≥ {v}%",
+  alertMenu:"АЛЕРТ ПРИ СПРЕДЕ ≥",
+  alertOffOpt:"Убрать алерт",
+  alertSetT:"Алерт установлен: {coin} спред ≥ {v}%",
+  alertFired:"🔔 {coin} {a} → {b}: спред достиг {v}%",
+  slip:"Проскальзывание",
+  slipEst:"считаем…",
+  slipNA:"н/д",
+  slipFor:"на {d} USDT",
+  navJour:"Журнал",
+  jTitle:"Журнал сделок",
+  jSub:"Отслеживаемые сделки и результаты",
+  jTrack:"📌 Отслеживать сделку",
+  jTracking:"📌 Отслеживается",
+  jActiveT:"Активные сделки",
+  jClosedT:"Закрытые сделки",
+  jClose:"Закрыть",
+  jEmpty:"Отметьте сделку в её карточке — вход, время и результат появятся здесь.",
+  jPnl:"Общий PnL",
+  jWinrate:"Винрейт",
+  jTrades:"Сделок",
+  jAvg:"Средний ROI",
+  jTracked:"Сделка добавлена в журнал",
+  jClosedMsg:"Сделка закрыта: {p}",
+  atrTitle:"📌 Активные сделки",
+  feeMenu:"КОМИССИЯ ТЕЙКЕРА (ЗА НОГУ)",
+  feeChanged:"Комиссии обновлены: {v}% за ногу · {r}% полный круг",
+  buySellPx:"Купить на <b>{a}</b> @ {pa} → Продать на <b>{b}</b> @ {pb}",
+  execNote:"Исполняемый спред: лучшие bid/ask, не last-цена",
+  mktTitle:"Форекс и акции",
+  mktWhy:"Почему это монитор?",
+  goldNote:"Настоящий арбитраж золота уже в Сканере: токенизированное золото <b>PAXG</b> и <b>XAUT</b> торгуется на тех же крипто-биржах — межбиржевые спреды по ним ловятся той же механикой двух ног.",
+  fxTitle:"ФОРЕКС",
+  fxRateL:"КУРС",
+  fxSub:"Референс ЕЦБ · дневной",
+  stTitle:"АКЦИИ",
+  stPriceL:"ЦЕНА",
+  stNeedKey:"Для живых котировок акций нужен бесплатный API-ключ Finnhub (60 запр/мин, без карты).",
+  stGet:"Возьми на finnhub.io → вставь ниже:",
+  stSave:"Подключить",
+  stBad:"Ключ не сработал — проверь и попробуй снова",
+  mktOffline:"Курсы недоступны — проверь соединение",
+  exp1h:"Почему монитор, а не сканер",
+  exp1p:"Акции торгуются на одной централизованной бирже — между брокерами единая лучшая цена, арбитражить нечего. Межбанковский форекс эффективен до четвёртого знака, а ритейл-брокеры банят кросс-брокерный арбитраж. Механики двух ног лонг/шорт, как в крипто-перпах, у ритейла здесь нет.",
+  exp2h:"Где межрыночные деньги есть",
+  exp2p:"Токенизированные активы на крипто-рельсах: золото (PAXG, XAUT) — уже в твоём Сканере; плюс funding на золотых перпах. А эта секция держит перед глазами форекс и акции — макрокартину, в которой живут твои спреды.",
+  tour:[
+    {t:"Рынок с первого взгляда", d:"Живая сводка: сколько возможностей сейчас, лучший чистый ROI после комиссий, средний спред и funding по всем биржам."},
+    {t:"Market Regime", d:"Текущее состояние рынка и насколько оно благоприятно для арбитража, плюс отсчёт до следующей выплаты funding."},
+    {t:"Лучшие возможности", d:"Лучшая сделка в каждой стратегии прямо сейчас. Нажмите на карточку, чтобы открыть детали."},
+    {t:"Стратегии", d:"Переключение между Spot → Futures, межбиржевым Futures → Futures и Funding-арбитражем. «Все» показывает всё сразу."},
+    {t:"Умные фильтры", d:"Выбор бирж, минимальный спред и сортировка. Фильтры применяются к живой таблице мгновенно."},
+    {t:"Как читать строку", d:"В каждой строке: маршрут, живой спред со вспышками, время жизни спреда и чистая прибыль с оценкой риска. Нажмите на строку для анализа."},
+    {t:"Trade Assistant", d:"Ассистент следит за каждой сделкой: 🟢 держать, 🟡 готовиться к выходу, 🔴 закрывать — и объясняет почему."},
+    {t:"Калькулятор прибыли", d:"Введите депозит — валовая прибыль, комиссии и чистый результат пересчитаются мгновенно. Ниже — пошаговый план исполнения."}
+  ]
+},
+bg:{
+  opportunities:"Възможности", strategies3:"3 стратегии", bestRoi:"Най-добър нетен ROI", afterFees:"след такси",
+  avgSpread:"Среден спред", acrossMkts:"по всички пазари", avgFunding:"Среден funding", rate8h:"8ч ставка",
+  exchanges:"Борси", online:"онлайн", allConn:"всички свързани",
+  topOpp:"Топ възможности", seeAll:"Виж всички", scanner:"Скенер", pause:"Пауза", resume:"Продължи", all:"Всички",
+  chipEx:"Борси", chipSpread:"Мин. спред", chipSort:"Сорт.: ", spreadGe:"Спред ≥ {v}%",
+  mExch:"БОРСИ", mMinSpread:"МИНИМАЛЕН СПРЕД", mSortBy:"СОРТИРАНЕ", any:"Всякакъв",
+  sortSpread:"Спред", sortNet:"Нетна печалба", sortVol:"Обем", sortFresh:"Наскоро обновени",
+  thInstr:"ИНСТРУМЕНТ · МАРШРУТ", thFunding:"FUNDING", thVol:"ОБЕМ 24Ч", thSpread:"СПРЕД", thNet:"НЕТО / РИСК",
+  rMarket:"ПАЗАР", trending:"Тренд", rFunding:"FUNDING", positive:"Положителен", negative:"Отрицателен",
+  rVol:"ВОЛАТИЛНОСТ", high:"Висока", rQuality:"КАЧЕСТВО АРБ.", qEx:"Отлично", qGood:"Добро", qFair:"Средно", rNext:"ДО FUNDING",
+  life:"~{n}м живот", rsLow:"Нисък", rsMed:"Сред.", rsHigh:"Висок", rfLow:"Нисък", rfMed:"Среден", rfHigh:"Висок",
+  bestNow:"🔥 НАЙ-ДОБРА СЕГА", net:"нето",
+  buySell:"Купи на <b>{a}</b> → Продай на <b>{b}</b>", spreadNet:"спред · нето",
+  appeared:"Появи се преди <b>{a}</b> · среден живот на подобни спредове <b>~{n} мин</b>",
+  hold:"🟢 Задръж", assist:"Спредът е стабилен, ликвидността е <b>{liq}</b>. {fund} Засега няма сигнал за изход.",
+  fundPos:"Funding работи във ваша полза.", fundNeg:"Funding е леко отрицателен.",
+  liqHigh:"висока", liqMedium:"средна", liqLow:"ниска",
+  confidence:"Увереност", execution:"Изпълнение", easy:"Лесно", medium:"Средно", hard:"Трудно",
+  funding8:"Funding (8ч)", fees:"Такси общо", vol24:"Обем 24ч", risk:"Риск",
+  deposit:"Депозит, USDT", gross:"БРУТО", feesU:"ТАКСИ", netProfitU:"НЕТНА ПЕЧАЛБА",
+  guide:"План за изпълнение", watchlist:"☆ Наблюдавай", alert:"Създай алерт",
+  s1:"Купи {coin} на {ex}", s1subSpot:"Спот пазар, лимитирана поръчка при най-добър бид", s1subPerp:"Дълга перп позиция",
+  s2:"Отвори къса позиция на {ex}", s2sub:"Същият обем, изолиран марджин",
+  s3:"Провери изпълнението", s3sub:"Сравни обемите и входните цени",
+  s4:"Следи свиването на спреда", s4sub:"Асистентът ще сигнализира за изход",
+  s5:"Затвори двете позиции", s5sub:"Изход при спред ≤ такси или при сигнал 🔴",
+  wTitle:"Добре дошли в Arbitrage Terminal", wSub:"Намирайте, анализирайте и управлявайте арбитражни сделки на 8 борси",
+  f1t:"Скенер на живо", f1d:"Spot → Futures, междуборсови и funding възможности в реално време.",
+  f2t:"Trade Assistant", f2d:"Обяснява всяка възможност и подсказва кога да задържите или излезете.",
+  f3t:"Execution Guide", f3d:"Инструкции стъпка по стъпка, калкулатор на печалба и анализ на риска.",
+  takeTour:"Започни обиколка", explore:"Ще разгледам сам",
+  skip:"Пропусни", next:"Напред", done:"Готово", stepOf:"СТЪПКА {i} ОТ {n}",
+  simPromoT:"Арбитражен симулатор", simPromoD:"Тренирайте върху записани пазарни данни — отворете виртуална сделка и победете пазара.", simPromoBtn:"Играй",
+  simPick:"Изберете сценарий", simSubPick:"Записани пазарни сесии",
+  scn1t:"Сутрешна funding игра", scn1d:"BTC, спокоен пазар. Спредът бавно расте преди funding плащането. Лек старт.",
+  scn2t:"SOL свиване между борси", scn2d:"Между две борси се отваря ликвиден разрив. Прозорецът е добър, но кратък.",
+  scn3t:"Лудостта на PEPE листинга", scn3d:"Нов листинг. Спредът излита и умира за минути. Мигнеш — и край.",
+  simWait:"Натиснете play и следете двете цени. Отварянето на сделката е едновременно LONG на {a} и SHORT на {b}. После чакате цените да се сближат.", netPnl:"НЕТЕН P&L",
+  simOpen:"Отвори двете позиции", simCloseTrade:"Затвори двете позиции", simDeposit:"Депозит, USDT",
+  simEntry:"ВХОД", simNow:"СЕГА", simPnl:"P&L",
+  simEnded:"Сесията приключи", simMissed:"Възможността дойде и си отиде — така и не влязохте. Случва се на всеки.",
+  resYour:"Вашият резултат", resBest:"Максимално възможно", resCapture:"Взехте {p}% от максимума",
+  vGreat:"Отлично изпълнение!", vGreatD:"Прочетохте спреда почти перфектно. Точно така трябва да се усеща арбитражът.",
+  vGood:"Стабилна сделка", vGoodD:"Хванахте добра част от движението. Малко по-късен вход или по-ранен изход — и щеше да е перфектно.",
+  vOk:"Печалбата си е печалба", vOkD:"Оставихте пари на масата, но затворихте на плюс. Следващия път следете пика на спреда.",
+  vBad:"Пазарът спечели този рунд", vBadD:"Влязохте твърде късно или държахте твърде дълго. Повторете сценария и вижте къде беше пикът.",
+  simAgain:"Повтори", simNewScn:"Нов сценарий",
+  navHome:"Терминал",
+  navScan:"Скенер",
+  navSim:"Симулатор",
+  navAcad:"Академия",
+  acadTitle:"Академия",
+  acadSub:"Ръководства за арбитражна търговия",
+  acadBack:"Академия",
+  modeDemo:"ДЕМО",
+  modeLive:"LIVE",
+  modeWait:"СВЪРЗВАНЕ",
+  liveOk:"Данни на живо: реални цени от борсите",
+  liveFail:"Няма връзка с API на борсите — оставаме на демо данни",
+  liveOff:"Върнахме се към демо данни",
+  appearedLive:"Появи се преди <b>{a}</b> · данни на живо",
+  acadOpenSim:"Практика в симулатора",
+  acadOpenScan:"Отвори скенера",
+  acad:[{"i": "💡", "t": "Какво е арбитраж", "d": "Същността за 3 минути", "b": [["Една монета — две цени", "Една и съща монета често струва различно на различните борси. BTC може да е 64 200 на Binance и 64 500 на Bybit в един и същ момент. Тази разлика се нарича <b>спред</b>."], ["Защо цените се разминават", "Всяка борса има свои купувачи и продавачи. Новини, големи поръчки, листинги и слаба ликвидност раздалечават цените за секунди или минути, докато трейдърите не ги съберат обратно."], ["Как печелите", "Купувате там, където е евтино, и продавате там, където е скъпо — едновременно. Когато цените се сближат, затваряте двете страни и прибирате разликата."], ["Пазарна неутралност", "Държите лонг и шорт едновременно, затова няма значение дали пазарът расте или пада. Печалбата зависи само от свиването на разликата."], ["Единствената формула", "<b>Печалба = спред − такси</b>. Ако спредът е 0.8%, а двата крака струват 0.2% такси, прибирате 0.6%. Ако таксите са повече от спреда — сделката няма смисъл."]]}, {"i": "📘", "t": "Как се отваря фючърсна сделка", "d": "Перпетуали, марджин, ливъридж — стъпка по стъпка", "b": [["Какво е перпетуал", "Перпетуалът (perp) е фючърсен контракт без дата на изтичане. Цената му следва спот цената на монетата. Това е основният инструмент за арбитраж, защото лесно се шорти."], ["Лонг и шорт", "<b>Лонг</b> — печелите при покачване на цената. <b>Шорт</b> — при спад. В арбитража почти винаги държите по един от двата на различни борси."], ["Марджин режим: изберете Isolated", "Борсите предлагат Cross и Isolated. За арбитраж винаги <b>Isolated</b> — проблем в една позиция никога няма да засегне останалата сметка."], ["Ливъридж: дръжте 1–3×", "Ливъриджът умножава и размера, и риска. Печалбата в арбитража идва от малки спредове, не от ливъридж. <b>1× е най-безопасно</b>; не минавайте над 3×, докато се учите."], ["Стъпка по стъпка", "1. Прехвърлете USDT във фючърсния портфейл. 2. Отворете двойката, напр. BTCUSDT Perpetual. 3. Задайте Isolated, 1×. 4. Изберете Limit поръчка и задайте цена. 5. След изпълнението проверете размера и входната цена."], ["За ликвидацията", "Ликвидация настъпва, когато загубата изяде марджина ви. При 1× на изолирана позиция цената трябва да се движи ~100% срещу вас — практически невъзможно за минути или часове арбитражно държане."]]}, {"i": "🔵", "t": "Стратегия Spot → Futures", "d": "Класическата делта-неутрална сделка", "b": [["Схемата", "Купувате монетата на спот пазара и отваряте шорт на перпа със същия размер. Позицията е напълно хеджирана: монетата може да отиде навсякъде, вашият PnL стои на място."], ["Откъде идва печалбата", "Два източника: <b>базисът</b> (фючърсът обикновено се търгува малко над спота и тази премия се свива към нула) и <b>funding</b> — периодични плащания, които шортовете получават при положителен funding."], ["Стъпки", "1. Купете X монети на спот. 2. Шортнете точно X на перпа, Isolated 1×. 3. Сверете изпълнението на двата крака. 4. Дръжте и събирайте funding. 5. Затворете двата крака заедно, когато базисът се свие."], ["Кога да излезете", "Излезте, когато базисът е близо до нула, когато funding е отрицателен няколко поредни интервала, или при достигане на целта. Двата крака винаги се затварят едновременно."]]}, {"i": "🟡", "t": "Стратегия Futures → Futures", "d": "Междуборсово сближаване", "b": [["Схемата", "Един и същ перп струва различно на две борси. <b>Лонг на по-евтината</b> борса, <b>шорт на по-скъпата</b>, еднакъв размер."], ["Чакане на сближаването", "Двете цени се движат заедно с пазара — това е нормално. Интересува ви само разликата. Когато тя се свие, лонгът и шортът заедно фиксират печалбата."], ["Смятайте таксите на двата крака", "Плащате вход и изход на две борси — четири изпълнения. Спред 0.5% при общи такси 0.4% оставя само 0.1%. Смятайте преди входа, не след него."], ["Основният риск", "Спредът може да се разшири, преди да се свие. Това е временна хартиена загуба. Вземайте такъв размер, че да държите спокойно, и слагайте лимит по време — не се ли свие в прозореца ви, затваряйте и продължавайте."]]}, {"i": "⚡", "t": "Funding арбитраж", "d": "Плащания на всеки 8 часа", "b": [["Какво е funding", "Перпетуалите стоят близо до спота благодарение на funding: на всеки 8 часа лонговете и шортовете си разменят малко плащане. Положителен funding → лонговете плащат на шортовете. Отрицателен → обратното."], ["Стратегията", "Когато funding е силно положителен: покупка на спот + шорт на перпа. Позицията е неутрална и на всеки 8 часа шортът получава funding плащането."], ["Какво да следите", "Funding не е фиксиран — преизчислява се постоянно. Таймерът в терминала показва следващото плащане. Ако прогнозният funding стане отрицателен, сделката губи двигателя си."], ["Реалистични числа", "Типичният funding е 0.01% за 8ч (~11% годишно). При горещ пазар по отделни монети стига 0.1%+ на интервал — тогава тази стратегия блести."]]}, {"i": "🛡️", "t": "Управление на риска", "d": "Как да не върнете печалбата обратно", "b": [["Слипидж", "Поръчката се изпълнява на по-лоша цена от екрана — често при слаби стакани. Предпочитайте лимитирани поръчки и ликвидни двойки. Колоната за ликвидност в скенера е точно за това."], ["Правилото за двата крака", "Арбитражната позиция е една сделка с два крака. Никога не оставяйте единия крак отворен „за малко“ — това вече не е арбитраж, а гола насочена позиция."], ["Размер на позицията", "Рискувайте малка част от сметката на сделка — 5–10%, докато се учите. Много малки стабилни спредове са по-добри от една раздута сделка, която ви заключва."], ["Стоп по време", "Преди входа решете колко сте готови да държите. Спредът не се е свил в прозореца ви? Затваряйте, приемете малката цена и вземете следващата възможност."], ["Първо таксите", "Преди всеки вход един въпрос: покрива ли спредът четирите изпълнения плюс слипиджа? Ако отговорът не е ясно „да“ — пропуснете. Пропускането е безплатно."]]}],
+  chipWatchT:"★ Наблюдавани",
+  watchAdd:"☆ Наблюдавай",
+  watchOn:"★ В списъка",
+  alertBtn:"Създай алерт",
+  alertAt:"🔔 ≥ {v}%",
+  alertMenu:"АЛЕРТ ПРИ СПРЕД ≥",
+  alertOffOpt:"Премахни алерта",
+  alertSetT:"Алерт зададен: {coin} спред ≥ {v}%",
+  alertFired:"🔔 {coin} {a} → {b}: спредът достигна {v}%",
+  slip:"Слипидж",
+  slipEst:"изчисляваме…",
+  slipNA:"н/д",
+  slipFor:"за {d} USDT",
+  navJour:"Журнал",
+  jTitle:"Журнал на сделките",
+  jSub:"Проследени сделки и резултати",
+  jTrack:"📌 Проследи сделката",
+  jTracking:"📌 Проследява се",
+  jActiveT:"Активни сделки",
+  jClosedT:"Затворени сделки",
+  jClose:"Затвори",
+  jEmpty:"Отбележете сделка от нейната карта — вход, време и резултат ще се появят тук.",
+  jPnl:"Общ PnL",
+  jWinrate:"Успеваемост",
+  jTrades:"Сделки",
+  jAvg:"Среден ROI",
+  jTracked:"Сделката е добавена в журнала",
+  jClosedMsg:"Сделката е затворена: {p}",
+  atrTitle:"📌 Активни сделки",
+  feeMenu:"ТАКСА ТЕЙКЪР (НА КРАК)",
+  feeChanged:"Таксите са обновени: {v}% на крак · {r}% пълен кръг",
+  buySellPx:"Купи на <b>{a}</b> @ {pa} → Продай на <b>{b}</b> @ {pb}",
+  execNote:"Изпълним спред: най-добри bid/ask, не last цена",
+  mktTitle:"Форекс и акции",
+  mktWhy:"Защо е монитор?",
+  goldNote:"Истинският арбитраж на злато вече е в Скенера: токенизираното злато <b>PAXG</b> и <b>XAUT</b> се търгува на същите крипто борси — междуборсовите спредове се хващат със същата механика на два крака.",
+  fxTitle:"ФОРЕКС",
+  fxRateL:"КУРС",
+  fxSub:"Референс ЕЦБ · дневен",
+  stTitle:"АКЦИИ",
+  stPriceL:"ЦЕНА",
+  stNeedKey:"За живи котировки на акции е нужен безплатен Finnhub API ключ (60 заявки/мин, без карта).",
+  stGet:"Вземи от finnhub.io → постави долу:",
+  stSave:"Свържи",
+  stBad:"Ключът не сработи — провери и опитай пак",
+  mktOffline:"Курсовете са недостъпни — провери връзката",
+  exp1h:"Защо монитор, а не скенер",
+  exp1p:"Акциите се търгуват на една централизирана борса — между брокерите има една най-добра цена, няма какво да се арбитражира. Междубанковият форекс е ефективен до четвъртия знак, а ритейл брокерите забраняват крос-брокерния арбитраж. Механика на два крака като при крипто перповете тук няма.",
+  exp2h:"Къде има междупазарни пари",
+  exp2p:"Токенизирани активи на крипто релси: злато (PAXG, XAUT) — вече в твоя Скенер; плюс funding на златни перпове. Тази секция държи пред очите ти форекс и акциите — макрокартината, в която живеят твоите спредове.",
+  tour:[
+    {t:"Пазарът с един поглед", d:"Обобщение на живо: колко възможности има сега, най-добър нетен ROI след такси, среден спред и funding по всички борси."},
+    {t:"Market Regime", d:"Текущи пазарни условия и колко са благоприятни за арбитраж, плюс отброяване до следващото funding плащане."},
+    {t:"Топ възможности", d:"Най-добрата сделка във всяка стратегия в момента. Докоснете картата за пълни детайли."},
+    {t:"Стратегии", d:"Превключвайте между Spot → Futures, междуборсов Futures → Futures и Funding арбитраж. „Всички“ показва всичко."},
+    {t:"Умни филтри", d:"Изберете борси, минимален спред и сортиране. Филтрите работят мигновено върху живата таблица."},
+    {t:"Как се чете ред", d:"Всеки ред показва: маршрут, спред на живо, колко време живее спредът и нетна печалба с оценка на риска. Докоснете ред за анализ."},
+    {t:"Trade Assistant", d:"Асистентът следи всяка сделка: 🟢 задръж, 🟡 готви се за изход, 🔴 затвори — и обяснява защо."},
+    {t:"Калкулатор на печалба", d:"Въведете депозит — брутна печалба, такси и нетен резултат се изчисляват мигновено. По-долу: план стъпка по стъпка."}
+  ]
+}
+};
+let lang = "en";
+const t = k => (I18N[lang] && I18N[lang][k] !== undefined) ? I18N[lang][k] : I18N.en[k];
+const tpl = (k, vars) => Object.entries(vars).reduce((s,[key,v])=>s.split("{"+key+"}").join(v), t(k));
+
+
+const rnd = (a,b)=>a+Math.random()*(b-a);
+const pick = arr=>arr[Math.floor(Math.random()*arr.length)];
+const fmt = (n,d=2)=>n.toFixed(d);
+const fmtVol = v=>v==null?"—":v>=1e6?"$"+(v/1e6).toFixed(1)+"M":"$"+(v/1e3).toFixed(0)+"K";
+
+let idSeq = 0;
+function makeOpp(){
+  const coin = pick(Object.keys(COINS));
+  const strat = pick(["sf","ff","fund","sf","ff"]);
+  let a = pick(EXCH), b = pick(EXCH);
+  while(b===a) b = pick(EXCH);
+  const spread = strat==="fund" ? rnd(0.05,0.4) : rnd(0.15,1.6);
+  const funding = strat==="sf" ? rnd(-0.02,0.08) : rnd(-0.05,0.12);
+  const fees = rnd(0.08,0.22);
+  const hist = [];
+  let v = spread;
+  for(let i=0;i<40;i++){ v = Math.max(0.02, v + rnd(-0.08,0.08)); hist.push(v); }
+  hist.push(spread);
+  return {
+    id:++idSeq, coin, strat,
+    exA:a, exB:b,
+    spread, funding, fees,
+    net: Math.max(0.01, spread - fees + (strat!=="ff"?funding:0)),
+    vol: rnd(80e3, 12e6),
+    liq: pick(["High","High","Medium","Low"]),
+    hist,
+    born: Date.now() - rnd(5,240)*1000,
+    life: rnd(2.5,8),
+    conf: Math.round(rnd(72,99)),
+    diff: pick(["Easy","Easy","Medium","Hard"]),
+    updated: Date.now()
+  };
+}
+
+const EXHEALTH = EXCH.map(e=>({name:e, ms:Math.round(rnd(18,120)), ok:Math.random()>0.08}));
+
+let opps = Array.from({length:16}, makeOpp);
+
+/* state */
+const state = {
+  filter:"all", minSpread:0, sort:"spread", watchOnly:false,
+  exchanges:new Set(EXCH),
+  paused:false, openId:null
+};
+
+/* ================= HELPERS ================= */
+function riskOf(o){
+  if(o.liq==="High" && o.spread<1) return {k:"Low", c:"var(--green)"};
+  if(o.liq==="Low") return {k:"High", c:"var(--red)"};
+  return {k:"Med", c:"var(--yellow)"};
+}
+const riskShort = k => k==="Low"?t("rsLow"):k==="High"?t("rsHigh"):t("rsMed");
+const riskFull  = k => k==="Low"?t("rfLow"):k==="High"?t("rfHigh"):t("rfMed");
+const liqName   = l => l==="High"?t("liqHigh"):l==="Low"?t("liqLow"):t("liqMedium");
+const diffName  = d => d==="Easy"?t("easy"):d==="Hard"?t("hard"):t("medium");
+function coinDot(sym, size=22){
+  return `<span class="coin" style="width:${size}px;height:${size}px;background:${COINS[sym].c};font-size:${size*0.42}px">${sym[0]}</span>`;
+}
+function drawSpark(canvas, data, color){
+  const dpr = window.devicePixelRatio||1;
+  const w = canvas.clientWidth||canvas.width, h = canvas.clientHeight||canvas.height;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr,dpr);
+  const min = Math.min(...data), max = Math.max(...data);
+  const rng = (max-min)||1;
+  const px = i=>i/(data.length-1)*w;
+  const py = v=>h-3-((v-min)/rng)*(h-6);
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,color+"33"); grad.addColorStop(1,color+"00");
+  ctx.beginPath();
+  data.forEach((v,i)=>i?ctx.lineTo(px(i),py(v)):ctx.moveTo(px(i),py(v)));
+  ctx.strokeStyle = color; ctx.lineWidth = 1.6;
+  ctx.lineJoin="round"; ctx.lineCap="round";
+  ctx.stroke();
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+}
+const fmtPx = v => v>=1000 ? v.toLocaleString("en-US",{minimumFractionDigits:1,maximumFractionDigits:1})
+  : v>=10 ? v.toFixed(2) : v>=0.1 ? v.toFixed(4) : v.toFixed(8);
+function timeAgo(t){
+  const s = Math.floor((Date.now()-t)/1000);
+  return s<3 ? "now" : s+"s ago";
+}
+function ageStr(t0){
+  const u = lang==="en" ? ["m","s"] : ["м","с"];
+  const s = Math.floor((Date.now()-t0)/1000);
+  return s<60 ? s+u[1] : Math.floor(s/60)+u[0]+" "+(s%60)+u[1];
+}
+function lifeStr(o){
+  if(o.live) return `${ageStr(o.born)}`;
+  return `${ageStr(o.born)} · <b>${tpl("life",{n:o.life.toFixed(0)})}</b>`;
+}
+function nextFunding(){
+  const now = new Date();
+  const h = now.getUTCHours();
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), (Math.floor(h/8)+1)*8, 0, 0));
+  return next - now;
+}
+function cdStr(ms){
+  const s = Math.max(0, Math.floor(ms/1000));
+  const p = n=>String(n).padStart(2,"0");
+  return p(Math.floor(s/3600))+":"+p(Math.floor(s/60)%60)+":"+p(s%60);
+}
+
+/* ================= MARKET REGIME & HEALTH ================= */
+function renderRegime(){
+  const avgF = opps.reduce((a,o)=>a+o.funding,0)/opps.length;
+  const nHigh = opps.filter(o=>o.spread>0.8).length;
+  const quality = nHigh>=4 ? [t("qEx"),"var(--green)"] : nHigh>=2 ? [t("qGood"),"var(--green)"] : [t("qFair"),"var(--yellow)"];
+  document.getElementById("regime").innerHTML = `
+    <div class="regime-item"><div class="regime-l">${t("rMarket")}</div><div class="regime-v">${t("trending")}</div></div>
+    <div class="regime-item"><div class="regime-l">${t("rFunding")}</div><div class="regime-v" style="color:${avgF>=0?"var(--green)":"var(--red)"}">${avgF>=0?t("positive"):t("negative")}</div></div>
+    <div class="regime-item"><div class="regime-l">${t("rVol")}</div><div class="regime-v" style="color:var(--yellow)">${t("high")}</div></div>
+    <div class="regime-item"><div class="regime-l">${t("rQuality")}</div><div class="regime-v" style="color:${quality[1]}">${quality[0]}</div></div>
+    <div class="regime-item"><div class="regime-l">${t("rNext")}</div><div class="regime-v num fund-cd">${cdStr(nextFunding())}</div></div>`;
+}
+function renderHealth(){
+  let list;
+  if(LIVE.mode==="live" && LIVE.health){
+    list = EXCH.map(name=>{
+      const h = LIVE.health[name];
+      return {name, ok:!!(h&&h.ok), ms:h&&h.ok?h.ms:null};
+    });
+  } else {
+    list = EXHEALTH;
+  }
+  document.getElementById("exh").innerHTML = list.map(e=>`
+    <div class="exh-item" style="${e.ms==null?"opacity:.55":""}">
+      <span class="exh-dot" style="background:${e.ok?"var(--green)":"var(--red)"}"></span>
+      ${e.name}
+      <span class="exh-ms">${e.ms==null?"—":e.ms+"ms"}</span>
+    </div>`).join("");
+}
+setInterval(()=>{
+  if(LIVE.mode!=="demo") return;
+  EXHEALTH.forEach(e=>{ e.ms = Math.max(12, e.ms + Math.round(rnd(-9,9))); });
+  renderHealth();
+}, 3000);
+setInterval(()=>{
+  const cd = cdStr(nextFunding());
+  document.querySelectorAll(".fund-cd").forEach(el=>el.textContent=cd);
+}, 1000);
+
+/* ================= STATS ================= */
+function renderStats(){
+  const el = document.getElementById("stats");
+  const best = Math.max(...opps.map(o=>o.net));
+  const avgS = opps.reduce((a,o)=>a+o.spread,0)/opps.length;
+  const avgF = opps.reduce((a,o)=>a+o.funding,0)/opps.length;
+  el.innerHTML = `
+    <div class="stat"><div class="stat-label">${t("opportunities")}</div><div class="stat-value">${opps.length}</div><div class="stat-sub">${t("strategies3")}</div></div>
+    <div class="stat"><div class="stat-label">${t("bestRoi")}</div><div class="stat-value up">+${fmt(best)}%</div><div class="stat-sub">${t("afterFees")}</div></div>
+    <div class="stat"><div class="stat-label">${t("avgSpread")}</div><div class="stat-value">${fmt(avgS)}%</div><div class="stat-sub">${t("acrossMkts")}</div></div>
+    <div class="stat"><div class="stat-label">${t("avgFunding")}</div><div class="stat-value" style="color:${avgF>=0?"var(--green)":"var(--red)"}">${avgF>=0?"+":""}${fmt(avgF,3)}%</div><div class="stat-sub">${t("rate8h")}</div></div>
+    <div class="stat"><div class="stat-label">${t("exchanges")}</div><div class="stat-value">${LIVE.mode==="live"&&LIVE.health?Object.values(LIVE.health).filter(h=>h.ok).length:EXCH.length} <small>${t("online")}</small></div><div class="stat-sub">${LIVE.mode==="live"?EXCH.length+" total":t("allConn")}</div></div>`;
+}
+
+/* ================= CARDS ================= */
+function renderCards(){
+  const el = document.getElementById("cards");
+  const sorted = [...opps].sort((a,b)=>b.net-a.net);
+  const hot = sorted[0];
+  const bestSf = sorted.find(o=>o.strat==="sf");
+  const bestFf = sorted.find(o=>o.strat==="ff");
+  const bestFund = sorted.find(o=>o.strat==="fund");
+  const items = [
+    hot && {o:hot, tag:t("bestNow"), cls:"tag-hot"},
+    bestSf && {o:bestSf, tag:"SPOT → FUT", cls:"tag-sf"},
+    bestFf && {o:bestFf, tag:"FUT → FUT", cls:"tag-ff"},
+    bestFund && {o:bestFund, tag:"FUNDING", cls:"tag-fund"}
+  ].filter(Boolean);
+  el.innerHTML = items.map(({o,tag,cls})=>`
+    <div class="card" data-id="${o.id}">
+      <span class="card-tag ${cls}">${tag}</span>
+      <div class="card-pair">${coinDot(o.coin)}<span class="card-pair-name">${o.coin}/USDT</span></div>
+      <div class="card-route">${o.exA} → ${o.exB}</div>
+      <canvas class="spark" width="204" height="34" style="width:100%;height:34px"></canvas>
+      <div class="card-bottom" style="margin-top:8px">
+        <span class="card-spread">${fmt(o.spread)}%</span>
+        <span class="card-roi">${t("net")} <b>+${fmt(o.net)}%</b></span>
+      </div>
+    </div>`).join("");
+  el.querySelectorAll(".card").forEach((c,i)=>{
+    drawSpark(c.querySelector("canvas"), items[i].o.hist, "#30D158");
+    c.onclick = ()=>openSheet(+c.dataset.id);
+  });
+}
+
+/* ================= TABLE ================= */
+function visibleOpps(){
+  let list = opps.filter(o=>
+    (state.filter==="all"||o.strat===state.filter) &&
+    o.spread>=state.minSpread &&
+    (state.exchanges.has(o.exA)||state.exchanges.has(o.exB)) &&
+    (!state.watchOnly || WATCH.has(oppKey(o)))
+  );
+  const s = state.sort;
+  list.sort((a,b)=> s==="net"?b.net-a.net : s==="vol"?b.vol-a.vol : s==="fresh"?b.updated-a.updated : b.spread-a.spread);
+  return list;
+}
+function renderRows(initial){
+  const el = document.getElementById("rows");
+  const list = visibleOpps();
+  el.innerHTML = list.map((o,i)=>{
+    const r = riskOf(o);
+    return `
+    <div class="row" data-id="${o.id}" style="animation-delay:${initial?i*35:0}ms">
+      <div class="row-main">
+        ${coinDot(o.coin,30)}
+        <div class="row-info">
+          <div class="row-pair"><span class="strat-dot" style="background:${STRATS[o.strat].dot}"></span>${o.coin}/USDT${WATCH.has(oppKey(o))?'<span class="row-star">★</span>':''}</div>
+          <div class="row-route">${o.exA} <b>→</b> ${o.exB} · ${STRATS[o.strat].label.toLowerCase()}</div>
+        </div>
+      </div>
+      <div class="row-right col-desk num" style="font-size:13px;color:${o.funding>=0?"var(--green)":"var(--red)"}">${o.funding>=0?"+":""}${fmt(o.funding,3)}%</div>
+      <div class="row-right col-desk num" style="font-size:13px;color:var(--txt-2)">${fmtVol(o.vol)}</div>
+      <div class="row-spread">
+        <span class="row-spread-val pos" id="sp-${o.id}">${o.est?"~":""}${fmt(o.spread)}%</span>
+        <div class="row-sub life" id="tm-${o.id}">${lifeStr(o)}</div>
+      </div>
+      <div class="row-right">
+        <div class="row-profit" style="color:var(--green)">+${fmt(o.net)}%</div>
+        <div class="risk"><span class="risk-dot" style="background:${r.c}"></span>${riskShort(r.k)}</div>
+      </div>
+    </div>`;
+  }).join("");
+  el.querySelectorAll(".row").forEach(rw=>rw.onclick=()=>openSheet(+rw.dataset.id));
+}
+
+/* ================= LIVE TICK ================= */
+function tick(){
+  if(state.paused) return;
+  if(LIVE.mode!=="demo"){
+    document.querySelectorAll("[id^='tm-']").forEach(el=>{
+      const o = opps.find(x=>"tm-"+x.id===el.id);
+      if(o) el.innerHTML = lifeStr(o);
+    });
+    updateTrades(); renderActive();
+    return;
+  }
+  const n = 2+Math.floor(Math.random()*3);
+  for(let i=0;i<n;i++){
+    const o = pick(opps);
+    const old = o.spread;
+    o.spread = Math.max(0.02, o.spread + rnd(-0.1,0.1));
+    o.net = Math.max(0.01, o.spread - o.fees + (o.strat!=="ff"?o.funding:0));
+    o.hist.push(o.spread); if(o.hist.length>41) o.hist.shift();
+    o.updated = Date.now();
+    const el = document.getElementById("sp-"+o.id);
+    if(el){
+      el.textContent = fmt(o.spread)+"%";
+      el.classList.remove("flash-up","flash-dn");
+      void el.offsetWidth;
+      el.classList.add(o.spread>=old?"flash-up":"flash-dn");
+    }
+  }
+  document.querySelectorAll("[id^='tm-']").forEach(el=>{
+    const o = opps.find(x=>"tm-"+x.id===el.id);
+    if(o) el.innerHTML = lifeStr(o);
+  });
+  renderStats();
+  renderRegime();
+  checkAlerts();
+  updateTrades();
+  renderActive();
+  if(state.openId) refreshSheet();
+}
+setInterval(tick, 2000);
+setInterval(()=>{ if(!state.paused){ renderRows(false); renderCards(); } }, 12000);
+
+/* clock */
+setInterval(()=>{
+  document.getElementById("clock").textContent = new Date().toLocaleTimeString("en-GB");
+},1000);
+
+/* ================= SEGMENTED ================= */
+const seg = document.getElementById("seg");
+const pill = document.getElementById("segPill");
+function movePill(btn){
+  pill.style.width = btn.offsetWidth+"px";
+  pill.style.transform = `translateX(${btn.offsetLeft-3}px)`;
+}
+seg.querySelectorAll("button").forEach(b=>{
+  b.onclick = ()=>{
+    seg.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    movePill(b);
+    state.filter = b.dataset.f;
+    renderRows(true);
+  };
+});
+window.addEventListener("load",()=>movePill(seg.querySelector("button.on")));
+window.addEventListener("resize",()=>movePill(seg.querySelector("button.on")));
+
+/* ================= MENUS ================= */
+function bindMenu(chipId, menuId, onPick, multi){
+  const chip = document.getElementById(chipId);
+  const menu = document.getElementById(menuId);
+  chip.onclick = e=>{
+    e.stopPropagation();
+    const wasOpen = menu.classList.contains("show");
+    closeAllMenus();
+    if(!wasOpen){
+      const r = chip.getBoundingClientRect();
+      menu.style.left = Math.min(r.left, window.innerWidth-230)+"px";
+      menu.style.top = (r.bottom+8)+"px";
+      menu.classList.add("show");
+      chip.classList.add("open");
+    }
+  };
+  menu.querySelectorAll(".menu-item").forEach(it=>{
+    it.onclick = e=>{
+      e.stopPropagation();
+      if(multi){ it.classList.toggle("sel"); }
+      else{
+        menu.querySelectorAll(".menu-item").forEach(x=>x.classList.remove("sel"));
+        it.classList.add("sel");
+        closeAllMenus();
+      }
+      onPick(it.dataset.v, it);
+    };
+  });
+}
+function closeAllMenus(){
+  document.querySelectorAll(".menu").forEach(m=>m.classList.remove("show"));
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("open"));
+}
+document.addEventListener("click", closeAllMenus);
+window.addEventListener("scroll", closeAllMenus, {passive:true});
+
+bindMenu("chipEx","menuEx",(v,it)=>{
+  if(it.classList.contains("sel")) state.exchanges.add(v);
+  else state.exchanges.delete(v);
+  const chip = document.getElementById("chipEx");
+  const n = state.exchanges.size;
+  chip.firstChild.textContent = (n===EXCH.length?t("chipEx")+" ":t("chipEx")+" · "+n+" ");
+  chip.classList.toggle("active", n!==EXCH.length);
+  renderRows(true);
+}, true);
+
+bindMenu("chipSpread","menuSpread",v=>{
+  state.minSpread = parseFloat(v);
+  const chip = document.getElementById("chipSpread");
+  chip.firstChild.textContent = state.minSpread>0 ? tpl("spreadGe",{v:state.minSpread})+" " : t("chipSpread")+" ";
+  chip.classList.toggle("active", state.minSpread>0);
+  renderRows(true);
+});
+
+bindMenu("chipSort","menuSort",(v,it)=>{
+  state.sort = v;
+  document.getElementById("chipSort").firstChild.textContent = t("chipSort")+it.querySelector("span").textContent+" ";
+  renderRows(true);
+});
+
+/* watch filter chip */
+document.getElementById("chipWatch").onclick = function(){
+  state.watchOnly = !state.watchOnly;
+  this.classList.toggle("active", state.watchOnly);
+  renderRows(true);
+};
+
+/* pause */
+document.getElementById("pauseBtn").onclick = function(){
+  state.paused = !state.paused;
+  this.textContent = state.paused?t("resume"):t("pause");
+};
+
+/* ================= SHEET ================= */
+const sheet = document.getElementById("sheet");
+const backdrop = document.getElementById("backdrop");
+
+function openSheet(id){
+  state.openId = id;
+  buildSheet();
+  sheet.classList.add("anim");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    sheet.classList.add("show");
+    backdrop.classList.add("show");
+  }));
+}
+function closeSheet(){
+  state.openId = null;
+  sheet.classList.remove("show");
+  backdrop.classList.remove("show");
+}
+backdrop.onclick = closeSheet;
+
+function buildSheet(){
+  const o = opps.find(x=>x.id===state.openId);
+  if(!o) return;
+  const r = riskOf(o);
+  const S = STRATS[o.strat];
+  const c = document.getElementById("sheetContent");
+  c.innerHTML = `
+    <div class="sheet-head">
+      ${coinDot(o.coin,34)}
+      <span class="sheet-pair">${o.coin}/USDT</span>
+      <span class="sheet-strat ${S.cls}">${S.label}</span>
+    </div>
+    <div class="sheet-route">${o.live&&o.pxA?tpl("buySellPx",{a:o.exA,b:o.exB,pa:fmtPx(o.pxA),pb:fmtPx(o.pxB)}):tpl("buySell",{a:o.exA,b:o.exB})}</div>
+    ${o.live?`<div class="sheet-life" style="margin:-14px 0 14px">${t("execNote")}</div>`:""}
+    <div class="sheet-big">
+      <span class="sheet-spread" id="shSpread">${o.est?"~":""}${fmt(o.spread)}%</span>
+      <span class="sheet-delta">${t("spreadNet")} <span style="color:var(--green)">+${fmt(o.net)}%</span></span>
+    </div>
+    <div class="sheet-chart-wrap"><canvas id="shChart" style="width:100%;height:120px"></canvas></div>
+    <div class="sheet-life">${o.live ? tpl("appearedLive",{a:ageStr(o.born)}) : tpl("appeared",{a:ageStr(o.born),n:o.life.toFixed(0)})}</div>
+
+    ${o.strat!=="ff" ? `<div class="fund-banner">
+      <span class="fund-banner-l">${t("rNext")}</span>
+      <span class="fund-banner-t fund-cd">${cdStr(nextFunding())}</span>
+    </div>` : ""}
+
+    <div class="assist hold">
+      <span class="assist-s">${t("hold")}</span>
+      <span class="assist-t">${tpl("assist",{liq:liqName(o.liq),fund:o.funding>=0?t("fundPos"):t("fundNeg")})}</span>
+    </div>
+
+    <div class="grid">
+      <div class="cell"><div class="cell-l">${t("confidence")}</div><div class="cell-v" style="color:${o.conf>=90?"var(--green)":o.conf>=80?"var(--txt)":"var(--yellow)"}">${o.conf}%</div><div class="conf-bar"><div class="conf-fill" style="width:${o.conf}%;background:${o.conf>=90?"var(--green)":o.conf>=80?"var(--blue)":"var(--yellow)"}"></div></div></div>
+      <div class="cell"><div class="cell-l">${t("execution")}</div><div class="cell-v" style="color:${o.diff==="Easy"?"var(--green)":o.diff==="Medium"?"var(--yellow)":"var(--red)"}">${diffName(o.diff)}</div></div>
+      <div class="cell"><div class="cell-l">${t("funding8")}</div><div class="cell-v" style="color:${o.funding>=0?"var(--green)":"var(--red)"}">${o.funding>=0?"+":""}${fmt(o.funding,3)}%</div></div>
+      <div class="cell"><div class="cell-l">${t("fees")}</div><div class="cell-v">${fmt(o.fees)}%</div></div>
+      <div class="cell"><div class="cell-l">${t("slip")}</div><div class="cell-v" id="slipV">…</div><div class="cell-l" id="slipSub" style="margin-top:3px;margin-bottom:0"></div></div>
+      <div class="cell"><div class="cell-l">${t("vol24")}</div><div class="cell-v">${fmtVol(o.vol)}</div></div>
+      <div class="cell"><div class="cell-l">${t("risk")}</div><div class="cell-v" style="color:${r.c}">${riskFull(r.k)}</div></div>
+    </div>
+
+    <div class="calc">
+      <div class="calc-row">
+        <span class="calc-label">${t("deposit")}</span>
+        <input class="calc-input" id="calcIn" type="number" value="1000" inputmode="decimal">
+      </div>
+      <div class="calc-out">
+        <div><div class="calc-o-l">${t("gross")}</div><div class="calc-o-v" id="calcGross">—</div></div>
+        <div><div class="calc-o-l">${t("feesU")}</div><div class="calc-o-v" id="calcFees" style="color:var(--red)">—</div></div>
+        <div><div class="calc-o-l">${t("netProfitU")}</div><div class="calc-o-v" id="calcNet" style="color:var(--green)">—</div></div>
+      </div>
+    </div>
+
+    <div class="sheet-sec-title">${t("guide")}</div>
+    <div class="steps">
+      <div class="step"><span class="step-n">1</span><span class="step-t">${tpl("s1",{coin:o.coin,ex:o.exA})}<small>${o.strat==="sf"?t("s1subSpot"):t("s1subPerp")}</small></span></div>
+      <div class="step"><span class="step-n">2</span><span class="step-t">${tpl("s2",{ex:o.exB})}<small>${t("s2sub")}</small></span></div>
+      <div class="step"><span class="step-n">3</span><span class="step-t">${t("s3")}<small>${t("s3sub")}</small></span></div>
+      <div class="step"><span class="step-n">4</span><span class="step-t">${t("s4")}<small>${t("s4sub")}</small></span></div>
+      <div class="step"><span class="step-n">5</span><span class="step-t">${t("s5")}<small>${t("s5sub")}</small></span></div>
+    </div>
+
+    <div class="btns">
+      <button class="btn btn-sec ${WATCH.has(oppKey(o))?"watch-on":""}" id="shWatch">${WATCH.has(oppKey(o))?t("watchOn"):t("watchAdd")}</button>
+      <button class="btn btn-pri ${ALERTS[oppKey(o)]!=null?"alert-on":""}" id="shAlert">${ALERTS[oppKey(o)]!=null?tpl("alertAt",{v:ALERTS[oppKey(o)]}):t("alertBtn")}</button>
+    </div>
+    <button class="btn btn-sec" id="shTrack" style="width:100%;margin-top:10px" ${J.active.some(x=>x.key===oppKey(o))?"disabled style='width:100%;margin-top:10px;opacity:.5'":""}>${J.active.some(x=>x.key===oppKey(o))?t("jTracking"):t("jTrack")}</button>`;
+
+  drawSpark(document.getElementById("shChart"), o.hist, "#30D158");
+
+  const inp = document.getElementById("calcIn");
+  const recalc = ()=>{
+    const d = parseFloat(inp.value)||0;
+    document.getElementById("calcGross").textContent = "$"+fmt(d*o.spread/100);
+    document.getElementById("calcFees").textContent = "-$"+fmt(d*o.fees/100);
+    document.getElementById("calcNet").textContent = "+$"+fmt(d*o.net/100);
+  };
+  inp.oninput = ()=>{ recalc(); clearTimeout(inp._st); inp._st = setTimeout(()=>updateSlippage(o, parseFloat(inp.value)||1000), 450); };
+  recalc();
+  updateSlippage(o, parseFloat(inp.value)||1000);
+
+  document.getElementById("shWatch").onclick = ()=>toggleWatch(o);
+  document.getElementById("shTrack").onclick = ()=>{
+    if(J.active.some(x=>x.key===oppKey(o))) return;
+    trackTrade(o, parseFloat(document.getElementById("calcIn").value)||1000);
+  };
+  document.getElementById("shAlert").onclick = e=>{
+    e.stopPropagation();
+    const menu = document.getElementById("menuAlert");
+    const wasOpen = menu.classList.contains("show");
+    closeAllMenus();
+    if(!wasOpen){
+      document.getElementById("alertMenuL").textContent = t("alertMenu");
+      document.getElementById("alertOffL").textContent = t("alertOffOpt");
+      const k = oppKey(o);
+      menu.querySelectorAll(".menu-item").forEach(it=>{
+        it.classList.toggle("sel", it.dataset.v!=="off" ? ALERTS[k]==+it.dataset.v : false);
+        it.onclick = ev=>{ ev.stopPropagation(); closeAllMenus(); setAlert(o, it.dataset.v==="off" ? null : +it.dataset.v); };
+      });
+      const r = e.currentTarget.getBoundingClientRect();
+      menu.style.left = Math.min(r.left, window.innerWidth-210)+"px";
+      menu.style.top = Math.max(12, r.top - 240)+"px";
+      menu.classList.add("show");
+    }
+  };
+}
+function refreshSheet(){
+  const o = opps.find(x=>x.id===state.openId);
+  if(!o) return;
+  const el = document.getElementById("shSpread");
+  if(el) el.textContent = fmt(o.spread)+"%";
+  const ch = document.getElementById("shChart");
+  if(ch) drawSpark(ch, o.hist, "#30D158");
+}
+
+/* sheet drag-to-close (mobile) */
+let dragY = null;
+sheet.addEventListener("touchstart", e=>{
+  if(sheet.scrollTop>2) return;
+  dragY = e.touches[0].clientY;
+  sheet.classList.remove("anim");
+},{passive:true});
+sheet.addEventListener("touchmove", e=>{
+  if(dragY===null) return;
+  const dy = e.touches[0].clientY - dragY;
+  if(dy>0) sheet.style.transform = `translateY(${dy}px)`;
+},{passive:true});
+sheet.addEventListener("touchend", e=>{
+  if(dragY===null) return;
+  const dy = e.changedTouches[0].clientY - dragY;
+  sheet.classList.add("anim");
+  sheet.style.transform = "";
+  if(dy>90) closeSheet();
+  dragY = null;
+});
+
+/* ================= TUTORIAL ================= */
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+const TOUR = [
+  { sel:".stats" },
+  { sel:".regime" },
+  { sel:".cards" },
+  { sel:".seg" },
+  { sel:".filters" },
+  { sel:".row", before(){ closeSheet(); } },
+  { sel:".assist", before(){ if(!state.openId){ const first=document.querySelector(".row"); if(first) openSheet(+first.dataset.id); } }, inSheet:true },
+  { sel:".calc", inSheet:true }
+];
+
+const welcomeEl = document.getElementById("welcome");
+const spot = document.getElementById("spot");
+const tutCard = document.getElementById("tutCard");
+let tutIdx = -1;
+
+function showWelcome(){
+  welcomeEl.classList.add("show");
+}
+function hideWelcome(){
+  welcomeEl.classList.remove("show");
+  store.set("at_tour_seen","1");
+}
+document.getElementById("tourSkip").onclick = hideWelcome;
+document.getElementById("tourStart").onclick = ()=>{ hideWelcome(); startTour(); };
+document.getElementById("helpBtn").onclick = ()=>{ endTour(); showWelcome(); };
+document.getElementById("tutEnd").onclick = endTour;
+document.getElementById("tutNext").onclick = ()=>stepTour(tutIdx+1);
+
+function startTour(){
+  state.paused = true;
+  document.getElementById("pauseBtn").textContent = t("resume");
+  document.getElementById("tutDots").innerHTML = TOUR.map(()=>'<span class="tut-dot"></span>').join("");
+  stepTour(0);
+}
+function endTour(){
+  tutIdx = -1;
+  spot.classList.remove("show");
+  tutCard.classList.remove("show");
+  state.paused = false;
+  document.getElementById("pauseBtn").textContent = t("pause");
+  closeSheet();
+}
+function stepTour(i){
+  if(i>=TOUR.length){ endTour(); return; }
+  tutIdx = i;
+  const s = TOUR[i];
+  if(s.before) s.before();
+  const tr = t("tour")[i];
+  document.getElementById("tutStep").textContent = tpl("stepOf",{i:i+1,n:TOUR.length});
+  document.getElementById("tutTitle").textContent = tr.t;
+  document.getElementById("tutText").textContent = tr.d;
+  document.getElementById("tutNext").textContent = i===TOUR.length-1 ? t("done") : t("next");
+  document.querySelectorAll(".tut-dot").forEach((d,n)=>d.classList.toggle("on",n===i));
+
+  // let sheet animation settle before measuring
+  setTimeout(()=>{
+    const el = document.querySelector(s.sel);
+    if(!el){ stepTour(i+1); return; }
+    if(!s.inSheet){
+      const r0 = el.getBoundingClientRect();
+      const targetY = window.scrollY + r0.top - 110;
+      window.scrollTo({top:Math.max(0,targetY), behavior:"auto"});
+    }
+    setTimeout(()=>{
+      const r = el.getBoundingClientRect();
+      const pad = 6;
+      spot.style.top = (r.top-pad)+"px";
+      spot.style.left = (r.left-pad)+"px";
+      spot.style.width = (r.width+pad*2)+"px";
+      spot.style.height = (r.height+pad*2)+"px";
+      spot.classList.add("show");
+      // tooltip position: below target if space, else above
+      const ch = 190;
+      let top = r.bottom + 16;
+      if(top + ch > window.innerHeight) top = Math.max(12, r.top - ch - 4);
+      tutCard.style.top = top+"px";
+      tutCard.style.left = Math.max(18, Math.min(r.left, window.innerWidth - (Math.min(340, window.innerWidth-36)) - 18))+"px";
+      tutCard.classList.add("show");
+    }, s.inSheet||i===0 ? 450 : 420);
+  }, s.before ? 350 : 0);
+}
+
+/* ================= SIMULATOR ================= */
+const SCN = [
+  {coin:"BTC", exA:"Binance", exB:"Bybit", fees:0.14, diff:"Easy",  n:360, peak:[0.55, 1.1], noise:0.035, secPerPt:15, p0:64200, dec:1},
+  {coin:"SOL", exA:"OKX", exB:"KuCoin", fees:0.18, diff:"Medium", n:360, peak:[0.45, 1.7], noise:0.06, secPerPt:15, p0:152.4, dec:2},
+  {coin:"PEPE",exA:"Gate.io", exB:"MEXC", fees:0.22, diff:"Hard", n:360, peak:[0.35, 2.6], noise:0.1, secPerPt:15, p0:0.00001240, dec:8}
+];
+const fmtP = v => sim.scn.dec>=8 ? v.toFixed(8) : v.toLocaleString("en-US",{minimumFractionDigits:sim.scn.dec, maximumFractionDigits:sim.scn.dec});
+const sim = { scn:null, data:null, idx:0, playing:false, speed:1, timer:null,
+              entryIdx:null, entrySpread:null, entryA:null, entryB:null, deposit:1000, closed:false };
+
+function genSimData(sc){
+  const sp=[]; const peakPos = sc.peak[0]*sc.n, peakH = sc.peak[1];
+  const width = sc.n * (sc.diff==="Hard" ? 0.09 : sc.diff==="Medium" ? 0.16 : 0.24);
+  let drift = 0;
+  for(let i=0;i<sc.n;i++){
+    const g = peakH * Math.exp(-Math.pow(i-peakPos,2)/(2*width*width));
+    const g2 = (sc.diff!=="Easy") ? peakH*0.35*Math.exp(-Math.pow(i-peakPos*1.6,2)/(2*(width*0.6)**2)) : 0;
+    drift = Math.max(-0.05, Math.min(0.05, drift + rnd(-sc.noise,sc.noise)*0.4));
+    sp.push(Math.max(0.02, 0.12 + g + g2 + drift + rnd(-sc.noise,sc.noise)));
+  }
+  /* both legs move together with the market — direction doesn't matter, only convergence */
+  const A=[], B=[];
+  let m = 1;
+  for(let i=0;i<sc.n;i++){
+    m *= 1 + rnd(-0.0016, 0.0016);
+    A.push(sc.p0 * m);
+    B.push(A[i] * (1 + sp[i]/100));
+  }
+  return {A, B, sp};
+}
+
+function simOpenScreen(){
+  state.paused = true;
+  document.getElementById("pauseBtn").textContent = t("resume");
+  renderScenarios();
+  simShowStage("stScenarios");
+  document.getElementById("simTitle").textContent = t("simPick");
+  document.getElementById("simSub").textContent = t("simSubPick");
+  document.getElementById("sim").classList.add("show");
+}
+function simExit(){
+  simStop();
+  document.getElementById("sim").classList.remove("show");
+  state.paused = false;
+  document.getElementById("pauseBtn").textContent = t("pause");
+}
+function simShowStage(id){
+  ["stScenarios","stPlay","stResult"].forEach(x=>document.getElementById(x).classList.toggle("on", x===id));
+}
+function renderScenarios(){
+  const dc = d => d==="Easy" ? ["tag-sf", t("easy")] : d==="Medium" ? ["tag-ff", t("medium")] : ["tag-hot", t("hard")];
+  document.getElementById("stScenarios").innerHTML = SCN.map((sc,i)=>{
+    const [cls,label]=dc(sc.diff);
+    return `
+    <div class="scn" data-i="${i}">
+      ${coinDot(sc.coin,36)}
+      <div class="scn-info">
+        <div class="scn-t">${t("scn"+(i+1)+"t")}</div>
+        <div class="scn-d">${t("scn"+(i+1)+"d")}</div>
+        <div class="scn-d" style="margin-top:4px;color:var(--txt-2)">${sc.exA} → ${sc.exB} · ${t("fees").toLowerCase()} ${fmt(sc.fees)}%</div>
+      </div>
+      <span class="scn-diff ${cls}">${label}</span>
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".scn").forEach(el=>el.onclick=()=>simStart(+el.dataset.i));
+}
+function simStart(i){
+  sim.scn = SCN[i];
+  sim.data = genSimData(sim.scn);
+  sim.idx = 0; sim.playing = false; sim.speed = 1;
+  sim.entryIdx = null; sim.entrySpread = null; sim.entryA = null; sim.entryB = null; sim.closed = false;
+  document.getElementById("simTitle").textContent = t("scn"+(i+1)+"t");
+  document.getElementById("simSub").textContent = `${sim.scn.coin}/USDT · ${sim.scn.exA} → ${sim.scn.exB}`;
+  document.getElementById("simSpeedBtn").textContent = "1×";
+  document.getElementById("simPlayBtn").textContent = "▶";
+  document.getElementById("simLegA").textContent = sim.scn.exA;
+  document.getElementById("simLegB").textContent = sim.scn.exB;
+  simShowStage("stPlay");
+  renderSimTrade();
+  drawSim();
+}
+function simToggle(){
+  if(sim.idx >= sim.data.sp.length-1) return;
+  sim.playing = !sim.playing;
+  document.getElementById("simPlayBtn").textContent = sim.playing ? "⏸" : "▶";
+  if(sim.playing && !sim.timer){
+    sim.timer = setInterval(simTick, 200);
+  } else if(!sim.playing){ simStop(); }
+}
+function simStop(){
+  if(sim.timer){ clearInterval(sim.timer); sim.timer = null; }
+  sim.playing = false;
+}
+function simTick(){
+  sim.idx = Math.min(sim.data.sp.length-1, sim.idx + sim.speed);
+  drawSim();
+  renderSimTrade(true);
+  if(sim.idx >= sim.data.sp.length-1){
+    simStop();
+    document.getElementById("simPlayBtn").textContent = "▶";
+    if(sim.entryIdx!==null && !sim.closed){ simFinish(true); }
+    else if(sim.entryIdx===null){ simResultMissed(); }
+  }
+}
+function curSpread(){ return sim.data.sp[sim.idx]; }
+function curA(){ return sim.data.A[sim.idx]; }
+function curB(){ return sim.data.B[sim.idx]; }
+function legLongPct(){ return (curA()-sim.entryA)/sim.entryA*100; }
+function legShortPct(){ return (sim.entryB-curB())/sim.entryB*100; }
+function curPnlPct(){ return legLongPct() + legShortPct() - sim.scn.fees; }
+function drawSim(){
+  const cv = document.getElementById("simChart");
+  const dpr = window.devicePixelRatio||1;
+  const w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr,dpr);
+  const {A, B, sp} = sim.data, n = sp.length;
+  const lo = Math.min(...A), hi = Math.max(...B);
+  const padY = (hi-lo)*0.06;
+  const px = i => i/(n-1)*w;
+  const py = v => h-4-((v-(lo-padY))/((hi+padY)-(lo-padY)))*(h-10);
+  /* shaded gap between the two legs = the spread */
+  ctx.beginPath();
+  for(let i=0;i<=sim.idx;i++){ i?ctx.lineTo(px(i),py(B[i])):ctx.moveTo(px(i),py(B[i])); }
+  for(let i=sim.idx;i>=0;i--){ ctx.lineTo(px(i),py(A[i])); }
+  ctx.closePath();
+  ctx.fillStyle = "rgba(48,209,88,.10)";
+  ctx.fill();
+  /* short leg (expensive exchange) — red */
+  ctx.beginPath();
+  for(let i=0;i<=sim.idx;i++){ i?ctx.lineTo(px(i),py(B[i])):ctx.moveTo(px(i),py(B[i])); }
+  ctx.strokeStyle="#FF453A"; ctx.lineWidth=1.8; ctx.lineJoin="round"; ctx.stroke();
+  /* long leg (cheap exchange) — blue */
+  ctx.beginPath();
+  for(let i=0;i<=sim.idx;i++){ i?ctx.lineTo(px(i),py(A[i])):ctx.moveTo(px(i),py(A[i])); }
+  ctx.strokeStyle="#0A84FF"; ctx.lineWidth=1.8; ctx.lineJoin="round"; ctx.stroke();
+  /* entry markers on both legs */
+  if(sim.entryIdx!==null){
+    [[A,"#0A84FF"],[B,"#FF453A"]].forEach(([arr,c])=>{
+      ctx.beginPath();
+      ctx.arc(px(sim.entryIdx), py(arr[sim.entryIdx]), 4.5, 0, Math.PI*2);
+      ctx.fillStyle=c; ctx.fill();
+      ctx.strokeStyle="#fff"; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+  /* playheads */
+  [[A,"#0A84FF"],[B,"#FF453A"]].forEach(([arr,c])=>{
+    ctx.beginPath();
+    ctx.arc(px(sim.idx), py(arr[sim.idx]), 3.5, 0, Math.PI*2);
+    ctx.fillStyle=c; ctx.fill();
+  });
+  /* UI numbers */
+  document.getElementById("simSpreadNow").textContent = fmt(curSpread())+"%";
+  const pa = document.getElementById("simPxA"), pb = document.getElementById("simPxB");
+  if(pa){ pa.textContent = fmtP(curA()); pb.textContent = fmtP(curB()); }
+  const sec = Math.round(sim.idx * sim.scn.secPerPt);
+  document.getElementById("simClock").textContent =
+    String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0");
+  document.getElementById("simProg").style.width = (sim.idx/(n-1)*100)+"%";
+}
+function renderSimTrade(light){
+  const el = document.getElementById("simTrade");
+  if(sim.entryIdx===null){
+    if(light) return;
+    el.innerHTML = `
+      <div class="calc-row" style="margin-bottom:12px">
+        <span class="calc-label">${t("simDeposit")}</span>
+        <input class="calc-input" id="simDep" type="number" value="${sim.deposit}" inputmode="decimal">
+      </div>
+      <button class="btn btn-pri" style="width:100%" id="simOpenBtn">${t("simOpen")}</button>
+      <div class="sim-hint">${tpl("simWait",{a:sim.scn.exA,b:sim.scn.exB})}</div>`;
+    document.getElementById("simDep").oninput = e=>{ sim.deposit = parseFloat(e.target.value)||0; };
+    document.getElementById("simOpenBtn").onclick = ()=>{
+      if(!sim.playing) simToggle();
+      sim.entryIdx = sim.idx;
+      sim.entrySpread = curSpread();
+      sim.entryA = curA();
+      sim.entryB = curB();
+      renderSimTrade();
+      drawSim();
+    };
+  } else if(!sim.closed){
+    const pl = legLongPct(), ps = legShortPct(), pnl = curPnlPct();
+    const usd = sim.deposit*pnl/100;
+    const col = pnl>=0 ? "var(--green)" : "var(--red)";
+    if(light && document.getElementById("simPnlV")){
+      document.getElementById("legLnow").textContent = fmtP(curA());
+      document.getElementById("legSnow").textContent = fmtP(curB());
+      const lv = document.getElementById("legLpnl");
+      lv.textContent = (pl>=0?"+":"")+fmt(pl)+"%"; lv.style.color = pl>=0?"var(--green)":"var(--red)";
+      const sv = document.getElementById("legSpnl");
+      sv.textContent = (ps>=0?"+":"")+fmt(ps)+"%"; sv.style.color = ps>=0?"var(--green)":"var(--red)";
+      const pv = document.getElementById("simPnlV");
+      pv.textContent = (pnl>=0?"+":"")+fmt(pnl)+"% · "+(usd>=0?"+":"−")+"$"+fmt(Math.abs(usd));
+      pv.style.color = col;
+      const cb = document.getElementById("simCloseBtn");
+      cb.style.background = pnl>=0?"var(--green)":"var(--red)";
+      return;
+    }
+    el.innerHTML = `
+      <div class="sim-leg">
+        <span class="leg-side" style="color:var(--blue)">LONG · ${sim.scn.exA}</span>
+        <span class="leg-px num">${fmtP(sim.entryA)} → <span id="legLnow">${fmtP(curA())}</span></span>
+        <span class="leg-pnl num" id="legLpnl" style="color:${pl>=0?"var(--green)":"var(--red)"}">${(pl>=0?"+":"")+fmt(pl)}%</span>
+      </div>
+      <div class="sim-leg">
+        <span class="leg-side" style="color:var(--red)">SHORT · ${sim.scn.exB}</span>
+        <span class="leg-px num">${fmtP(sim.entryB)} → <span id="legSnow">${fmtP(curB())}</span></span>
+        <span class="leg-pnl num" id="legSpnl" style="color:${ps>=0?"var(--green)":"var(--red)"}">${(ps>=0?"+":"")+fmt(ps)}%</span>
+      </div>
+      <div class="sim-leg" style="border-bottom:none;padding-bottom:2px">
+        <span class="leg-side" style="color:var(--txt)">${t("netPnl")}</span>
+        <span></span>
+        <span class="leg-pnl num" id="simPnlV" style="color:${col};font-size:16px">${(pnl>=0?"+":"")+fmt(pnl)}% · ${(usd>=0?"+":"−")}$${fmt(Math.abs(usd))}</span>
+      </div>
+      <button class="btn btn-pri" style="width:100%;margin-top:10px;background:${pnl>=0?"var(--green)":"var(--red)"}" id="simCloseBtn">${t("simCloseTrade")}</button>`;
+    document.getElementById("simCloseBtn").onclick = ()=>simFinish(false);
+  }
+}
+function bestPossible(){
+  let maxPrefix = -1e9, best = -1e9;
+  for(let j=0;j<sim.data.sp.length;j++){
+    if(sim.data.sp[j] > maxPrefix) maxPrefix = sim.data.sp[j];
+    best = Math.max(best, maxPrefix - sim.data.sp[j]);
+  }
+  return best - sim.scn.fees;
+}
+function simFinish(auto){
+  sim.closed = true;
+  simStop();
+  const exitSpread = curSpread();
+  const pl = legLongPct(), ps = legShortPct();
+  const pnl = curPnlPct();
+  const usd = sim.deposit*pnl/100;
+  const best = Math.max(0.01, bestPossible());
+  const capture = Math.max(0, Math.min(100, Math.round(pnl/best*100)));
+  let v = pnl<=0 ? "vBad" : capture>=80 ? "vGreat" : capture>=50 ? "vGood" : "vOk";
+  const emoji = {vGreat:"🏆", vGood:"💪", vOk:"🙂", vBad:"📉"}[v];
+  document.getElementById("simTitle").textContent = t("simEnded");
+  document.getElementById("simSub").textContent = `${sim.scn.coin}/USDT`;
+  document.getElementById("stResult").innerHTML = `
+    <div class="res-card">
+      <div class="res-emoji">${emoji}</div>
+      <div class="res-title">${t(v)}</div>
+      <div class="res-sub">${t(v+"D")}</div>
+      <div class="res-grid">
+        <div class="cell"><div class="cell-l">${t("resYour")}</div><div class="cell-v" style="color:${pnl>=0?"var(--green)":"var(--red)"}">${(pnl>=0?"+":"")+fmt(pnl)}% · ${(usd>=0?"+":"−")}$${fmt(Math.abs(usd))}</div></div>
+        <div class="cell"><div class="cell-l">${t("resBest")}</div><div class="cell-v">+${fmt(best)}%</div></div>
+        <div class="cell"><div class="cell-l">LONG · ${sim.scn.exA}</div><div class="cell-v" style="color:${pl>=0?"var(--green)":"var(--red)"}">${(pl>=0?"+":"")+fmt(pl)}%</div></div>
+        <div class="cell"><div class="cell-l">SHORT · ${sim.scn.exB}</div><div class="cell-v" style="color:${ps>=0?"var(--green)":"var(--red)"}">${(ps>=0?"+":"")+fmt(ps)}%</div></div>
+      </div>
+      <div class="res-capture">
+        <div class="res-capture-bar"><div class="res-capture-fill" style="width:0%"></div></div>
+        <div class="res-capture-l">${tpl("resCapture",{p:capture})}</div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-sec" id="simAgainBtn">${t("simAgain")}</button>
+      <button class="btn btn-pri" id="simNewBtn">${t("simNewScn")}</button>
+    </div>`;
+  simShowStage("stResult");
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelector(".res-capture-fill").style.width = capture+"%";
+  }));
+  document.getElementById("simAgainBtn").onclick = ()=>simStart(SCN.indexOf(sim.scn));
+  document.getElementById("simNewBtn").onclick = ()=>{
+    simShowStage("stScenarios");
+    document.getElementById("simTitle").textContent = t("simPick");
+    document.getElementById("simSub").textContent = t("simSubPick");
+    renderScenarios();
+  };
+}
+function simResultMissed(){
+  document.getElementById("simTitle").textContent = t("simEnded");
+  document.getElementById("stResult").innerHTML = `
+    <div class="res-card">
+      <div class="res-emoji">👀</div>
+      <div class="res-title">${t("simEnded")}</div>
+      <div class="res-sub">${t("simMissed")}</div>
+    </div>
+    <div class="btns">
+      <button class="btn btn-sec" id="simAgainBtn">${t("simAgain")}</button>
+      <button class="btn btn-pri" id="simNewBtn">${t("simNewScn")}</button>
+    </div>`;
+  simShowStage("stResult");
+  document.getElementById("simAgainBtn").onclick = ()=>simStart(SCN.indexOf(sim.scn));
+  document.getElementById("simNewBtn").onclick = ()=>{
+    simShowStage("stScenarios");
+    document.getElementById("simTitle").textContent = t("simPick");
+    document.getElementById("simSub").textContent = t("simSubPick");
+    renderScenarios();
+  };
+}
+document.getElementById("simPromo").onclick = simOpenScreen;
+document.getElementById("simClose").onclick = simExit;
+document.getElementById("simPlayBtn").onclick = simToggle;
+document.getElementById("simSpeedBtn").onclick = function(){
+  sim.speed = sim.speed===1 ? 4 : sim.speed===4 ? 16 : 1;
+  this.textContent = sim.speed+"×";
+};
+
+/* ================= NAVIGATION ================= */
+function navSet(k){
+  document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("on", b.dataset.nav===k));
+}
+function closeOverlays(){
+  simExit();
+  acadClose();
+  jourCloseFn();
+}
+document.querySelectorAll(".nav-item").forEach(b=>{
+  b.onclick = ()=>{
+    const k = b.dataset.nav;
+    navSet(k);
+    if(k==="home"){ closeOverlays(); window.scrollTo({top:0, behavior:"smooth"}); }
+    if(k==="scan"){ closeOverlays(); const el=document.getElementById("tScan"); window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 80, behavior:"smooth"}); }
+    if(k==="sim"){ acadClose(); jourCloseFn(); simOpenScreen(); }
+    if(k==="jour"){ simExit(); acadClose(); jourOpen(); }
+    if(k==="acad"){ simExit(); jourCloseFn(); acadOpen(); }
+  };
+});
+
+/* ================= ACADEMY ================= */
+let acadIdx = -1;
+function acadOpen(){
+  state.paused = true;
+  document.getElementById("pauseBtn").textContent = t("resume");
+  renderAcadList();
+  document.getElementById("acad").classList.add("show");
+}
+function acadClose(){
+  document.getElementById("acad").classList.remove("show");
+  acadIdx = -1;
+  if(!document.getElementById("sim").classList.contains("show")){
+    state.paused = false;
+    document.getElementById("pauseBtn").textContent = t("pause");
+  }
+}
+document.getElementById("acadClose").onclick = ()=>{ acadClose(); navSet("home"); };
+
+function renderAcadList(){
+  document.getElementById("acadTitle").textContent = t("acadTitle");
+  document.getElementById("acadSub").textContent = t("acadSub");
+  const guides = t("acad");
+  document.getElementById("acadList").classList.remove("off");
+  document.getElementById("acadArt").classList.remove("on");
+  document.getElementById("acadList").innerHTML = guides.map((g,i)=>`
+    <div class="gcard" data-i="${i}">
+      <div class="gcard-icon">${g.i}</div>
+      <div>
+        <div class="gcard-t">${g.t}</div>
+        <div class="gcard-d">${g.d}</div>
+      </div>
+      <span class="gcard-chev">›</span>
+    </div>`).join("");
+  document.querySelectorAll(".gcard").forEach(c=>c.onclick=()=>renderAcadArticle(+c.dataset.i));
+}
+function renderAcadArticle(i){
+  acadIdx = i;
+  const g = t("acad")[i];
+  document.getElementById("acadTitle").textContent = g.t;
+  document.getElementById("acadSub").textContent = t("acadSub");
+  document.getElementById("acadList").classList.add("off");
+  const art = document.getElementById("acadArt");
+  art.classList.add("on");
+  art.innerHTML = `
+    <button class="art-back" id="artBack">‹ ${t("acadBack")}</button>
+    <div class="art-h1">${g.i} ${g.t}</div>
+    ${g.b.map(([h,p])=>`<div class="art-block"><div class="art-h2">${h}</div><div class="art-p">${p}</div></div>`).join("")}
+    <div class="art-cta">
+      <button class="btn btn-sec" id="artToScan">${t("acadOpenScan")}</button>
+      <button class="btn btn-pri" id="artToSim">${t("acadOpenSim")}</button>
+    </div>`;
+  document.getElementById("artBack").onclick = renderAcadList;
+  document.getElementById("artToSim").onclick = ()=>{ acadClose(); navSet("sim"); simOpenScreen(); };
+  document.getElementById("artToScan").onclick = ()=>{ acadClose(); navSet("scan");
+    const el=document.getElementById("tScan"); window.scrollTo({top: el.getBoundingClientRect().top + window.scrollY - 80}); };
+  document.getElementById("acad").scrollTo({top:0});
+}
+
+/* ================= TOAST ================= */
+let toastTimer=null;
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove("show"), 4000);
+}
+
+/* ================= LIVE DATA ================= */
+const SETTINGS = { taker: parseFloat(store.get("at_fee")) || 0.05 };
+const roundTrip = () => SETTINGS.taker * 4;
+const LIVE = {
+  mode:"demo",           // demo | live
+  reg:new Map(),         // stable opp registry: key -> opp object
+  timer:null,
+  coins:Object.keys(COINS)
+};
+
+async function jget(url, ms=6000, opts=null){
+  const c = new AbortController();
+  const to = setTimeout(()=>c.abort(), ms);
+  try{
+    const r = await fetch(url, Object.assign({signal:c.signal}, opts||{}));
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return await r.json();
+  } finally { clearTimeout(to); }
+}
+
+/* Exchange adapters v2: best bid/ask where available → executable spreads.
+   est:true = venue reports only last/mid price (no real book top) */
+const KRAKEN_MAP = {XBT:"BTC"};
+const mkQ = (bid, ask, fund, vol, est) => {
+  bid=+bid; ask=+ask;
+  if(!isFinite(bid)||bid<=0) bid=ask;
+  if(!isFinite(ask)||ask<=0) ask=bid;
+  return {bid, ask, p:(bid+ask)/2, fund, vol, est:!!est};
+};
+const ADAPTERS = [
+  { name:"Binance",
+    run: async () => {
+      const [bt, pi] = await Promise.all([
+        jget("https://fapi.binance.com/fapi/v1/ticker/bookTicker"),
+        jget("https://fapi.binance.com/fapi/v1/premiumIndex")
+      ]);
+      const fund = {};
+      for(const x of pi){ if(x.symbol.endsWith("USDT")) fund[x.symbol] = +x.lastFundingRate*100; }
+      const m = {};
+      for(const x of bt){ const c = x.symbol.endsWith("USDT") ? x.symbol.slice(0,-4) : null;
+        if(c && LIVE.coins.includes(c)) m[c] = mkQ(x.bidPrice, x.askPrice, fund[x.symbol] ?? null, null, false); }
+      return m;
+    }},
+  { name:"Bybit",
+    run: async () => {
+      const d = await jget("https://api.bybit.com/v5/market/tickers?category=linear");
+      const m = {};
+      for(const x of (d.result?.list||[])){ const c = x.symbol.endsWith("USDT") ? x.symbol.slice(0,-4) : null;
+        if(c && LIVE.coins.includes(c)) m[c] = mkQ(x.bid1Price, x.ask1Price, x.fundingRate!==""?+x.fundingRate*100:null, +x.turnover24h||null, false); }
+      return m;
+    }},
+  { name:"OKX",
+    run: async () => {
+      const d = await jget("https://www.okx.com/api/v5/market/tickers?instType=SWAP");
+      const m = {};
+      for(const x of (d.data||[])){ const mm = x.instId.match(/^([A-Z0-9]+)-USDT-SWAP$/);
+        if(mm && LIVE.coins.includes(mm[1])) m[mm[1]] = mkQ(x.bidPx, x.askPx, null, null, false); }
+      return m;
+    }},
+  { name:"Bitget",
+    run: async () => {
+      const d = await jget("https://api.bitget.com/api/v2/mix/market/tickers?productType=USDT-FUTURES");
+      const m = {};
+      for(const x of (d.data||[])){ const c = x.symbol.endsWith("USDT") ? x.symbol.slice(0,-4) : null;
+        if(c && LIVE.coins.includes(c)) m[c] = mkQ(x.bidPr, x.askPr, x.fundingRate!=null?+x.fundingRate*100:null, +x.usdtVolume||null, false); }
+      return m;
+    }},
+  { name:"KuCoin",
+    run: async () => {
+      const d = await jget("https://api-futures.kucoin.com/api/v1/allTickers");
+      const m = {};
+      for(const x of (d.data||[])){ let c = x.symbol.endsWith("USDTM") ? x.symbol.slice(0,-5) : null;
+        if(c==="XBT") c="BTC";
+        if(c && LIVE.coins.includes(c)) m[c] = mkQ(x.bestBidPrice, x.bestAskPrice, null, null, false); }
+      return m;
+    }},
+  { name:"Gate.io",
+    run: async () => {
+      const d = await jget("https://api.gateio.ws/api/v4/futures/usdt/tickers");
+      const m = {};
+      for(const x of d){ const mm = (x.contract||"").match(/^([A-Z0-9]+)_USDT$/);
+        if(mm && LIVE.coins.includes(mm[1])) m[mm[1]] = mkQ(x.highest_bid, x.lowest_ask, x.funding_rate!=null?+x.funding_rate*100:null, x.volume_24h_quote!=null?+x.volume_24h_quote:null, false); }
+      return m;
+    }},
+  { name:"MEXC",
+    run: async () => {
+      const d = await jget("https://contract.mexc.com/api/v1/contract/ticker");
+      const m = {};
+      for(const x of (d.data||[])){ const mm = (x.symbol||"").match(/^([A-Z0-9]+)_USDT$/);
+        if(mm && LIVE.coins.includes(mm[1])) m[mm[1]] = mkQ(x.bid1, x.ask1, x.fundingRate!=null?+x.fundingRate*100:null, x.amount24!=null?+x.amount24:null, false); }
+      return m;
+    }},
+  { name:"Hyperliquid",
+    run: async () => {
+      const d = await jget("https://api.hyperliquid.xyz/info", 6000,
+        {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({type:"allMids"})});
+      const m = {};
+      for(const k of Object.keys(d||{})){
+        if(LIVE.coins.includes(k)) m[k] = mkQ(+d[k], +d[k], null, null, true);
+      }
+      return m;
+    }},
+  { name:"BingX",
+    run: async () => {
+      const d = await jget("https://open-api.bingx.com/openApi/swap/v2/quote/ticker");
+      const m = {};
+      for(const x of (d.data||[])){ const mm = (x.symbol||"").match(/^([A-Z0-9]+)-USDT$/);
+        if(mm && LIVE.coins.includes(mm[1])) m[mm[1]] = mkQ(+x.lastPrice, +x.lastPrice, null, x.quoteVolume!=null?+x.quoteVolume:null, true); }
+      return m;
+    }},
+  { name:"Kraken",
+    run: async () => {
+      const d = await jget("https://futures.kraken.com/derivatives/api/v3/tickers");
+      const m = {};
+      for(const x of (d.tickers||[])){ const mm = (x.symbol||"").toUpperCase().match(/^PF_([A-Z0-9]+)USD$/);
+        if(mm){ const c = KRAKEN_MAP[mm[1]] || mm[1];
+          if(LIVE.coins.includes(c)) m[c] = mkQ(x.bid, x.ask, x.fundingRate!=null?+x.fundingRate*100:null, x.volumeQuote!=null?+x.volumeQuote:null, false); } }
+      return m;
+    }}
+];
+
+async function fetchVenues(){
+  const spotP = jget("https://api.binance.com/api/v3/ticker/bookTicker").catch(()=>null);
+  const results = await Promise.allSettled(ADAPTERS.map(async a => {
+    const t0 = performance.now();
+    const m = await a.run();
+    return {name:a.name, m, ms:Math.round(performance.now()-t0)};
+  }));
+  LIVE.health = {};
+  const V = {};
+  const ensure = c => V[c] || (V[c] = {spotBid:null, spotAsk:null, perps:{}});
+  let okCount = 0;
+  results.forEach((r,i)=>{
+    const name = ADAPTERS[i].name;
+    if(r.status==="fulfilled" && Object.keys(r.value.m).length){
+      LIVE.health[name] = {ok:true, ms:r.value.ms};
+      okCount++;
+      for(const [coin, q] of Object.entries(r.value.m)) ensure(coin).perps[name] = q;
+    } else {
+      LIVE.health[name] = {ok:false, ms:null};
+    }
+  });
+  const spot = await spotP;
+  if(spot) for(const x of spot){
+    const c = x.symbol.endsWith("USDT") ? x.symbol.slice(0,-4) : null;
+    if(c && LIVE.coins.includes(c)){ const v=ensure(c); v.spotBid=+x.bidPrice; v.spotAsk=+x.askPrice; }
+  }
+  if(!okCount) throw new Error("no venue data");
+  return V;
+}
+
+function liveOpp(key, base){
+  let o = LIVE.reg.get(key);
+  if(!o){
+    o = Object.assign({ id:++idSeq, hist:[], born:Date.now(), life:0, live:true, updated:Date.now() }, base);
+    o.hist = Array(30).fill(base.spread);
+    LIVE.reg.set(key, o);
+  } else {
+    const old = o.spread;
+    Object.assign(o, base);
+    o.hist.push(o.spread); if(o.hist.length>41) o.hist.shift();
+    if(Math.abs(o.spread-old)>0.0001) o.updated = Date.now();
+    o._flash = o.spread>old ? "up" : o.spread<old ? "dn" : null;
+  }
+  return o;
+}
+
+function buildLiveOpps(V){
+  const out = [];
+  const FEES = roundTrip();
+  for(const coin of LIVE.coins){
+    const v = V[coin]; if(!v) continue;
+    for(const nm of Object.keys(v.perps)){
+      const q = v.perps[nm];
+      if(!isFinite(q.bid)||!isFinite(q.ask)||q.bid<=0||q.ask<=0) delete v.perps[nm];
+    }
+    const names = Object.keys(v.perps);
+    const volOf = () => v.perps.Bybit?.vol ?? v.perps.Bitget?.vol ?? null;
+    /* Futures -> Futures: buy at the lowest ASK, sell at the highest BID (executable) */
+    if(names.length>=2){
+      let lo=names[0], hi=names[0];
+      for(const nm of names){
+        if(v.perps[nm].ask < v.perps[lo].ask) lo=nm;
+        if(v.perps[nm].bid > v.perps[hi].bid) hi=nm;
+      }
+      if(lo!==hi){
+        const askLo = v.perps[lo].ask, bidHi = v.perps[hi].bid;
+        const spread = (bidHi-askLo)/askLo*100;
+        if(spread > 0.005){
+          const vol = volOf();
+          const est = v.perps[lo].est || v.perps[hi].est;
+          out.push(liveOpp(coin+"|ff", {
+            coin, strat:"ff", exA:lo, exB:hi, spread, est,
+            pxA:askLo, pxB:bidHi,
+            funding: v.perps[hi].fund ?? 0, fees:FEES,
+            net: Math.max(0, spread-FEES),
+            vol, liq: vol==null?"Medium":vol>10e6?"High":vol>1e6?"Medium":"Low",
+            conf: Math.min(99, 70 + (vol>10e6?20:vol>1e6?12:5) + (spread<0.5?4:0) - (est?10:0)),
+            diff: spread<0.25 ? "Easy" : spread<0.7 ? "Medium" : "Hard"
+          }));
+        }
+      }
+    }
+    /* Spot -> Futures: buy spot at ASK, sell perp at highest BID */
+    if(v.spotAsk && names.length){
+      let hi=names[0];
+      for(const nm of names){ if(v.perps[nm].bid > v.perps[hi].bid) hi=nm; }
+      const spread = (v.perps[hi].bid - v.spotAsk)/v.spotAsk*100;
+      if(spread > 0.005){
+        const fund = v.perps[hi].fund ?? 0;
+        const vol = volOf();
+        out.push(liveOpp(coin+"|sf", {
+          coin, strat:"sf", exA:"Binance", exB:hi, spread, est:v.perps[hi].est,
+          pxA:v.spotAsk, pxB:v.perps[hi].bid,
+          funding:fund, fees:FEES,
+          net: Math.max(0, spread-FEES+Math.max(0,fund)),
+          vol, liq: vol==null?"Medium":vol>10e6?"High":vol>1e6?"Medium":"Low",
+          conf: Math.min(99, 72 + (vol>10e6?18:8)),
+          diff: "Easy"
+        }));
+      }
+    }
+    /* Funding plays */
+    for(const nm of names){
+      const fu = v.perps[nm].fund;
+      if(fu!=null && fu>0.01){
+        out.push(liveOpp(coin+"|fund|"+nm, {
+          coin, strat:"fund", exA:"Spot", exB:nm, spread:fu, est:false,
+          funding:fu, fees:SETTINGS.taker*2, net:Math.max(0, fu-SETTINGS.taker*2),
+          vol: volOf(), liq:"High",
+          conf: 90, diff:"Easy"
+        }));
+      }
+    }
+  }
+  out.sort((a,b)=>b.spread-a.spread);
+  return out.slice(0, 24);
+}
+
+async function liveRefresh(initial){
+  try{
+    const V = await fetchVenues();
+    opps = buildLiveOpps(V);
+    if(initial){
+      setMode("live");
+      toast(t("liveOk"));
+      renderRows(true); renderCards(); renderStats(); renderRegime(); renderHealth();
+    } else {
+      /* in-place DOM updates with flashes */
+      for(const o of opps){
+        const el = document.getElementById("sp-"+o.id);
+        if(el){
+          el.textContent = fmt(o.spread)+"%";
+          if(o._flash){
+            el.classList.remove("flash-up","flash-dn");
+            void el.offsetWidth;
+            el.classList.add(o._flash==="up"?"flash-up":"flash-dn");
+          }
+        }
+      }
+      renderStats(); renderRegime(); renderHealth();
+      checkAlerts(); updateTrades(); renderActive();
+      if(state.openId) refreshSheet();
+    }
+  } catch(e){
+    if(initial){
+      setMode("demo");
+      toast(t("liveFail"));
+    }
+  }
+}
+
+function setMode(m){
+  LIVE.mode = m;
+  const badge = document.getElementById("modeBadge");
+  badge.classList.remove("demo","wait");
+  if(m==="demo") badge.classList.add("demo");
+  if(m==="wait") badge.classList.add("wait");
+  document.getElementById("modeTxt").textContent = m==="live" ? t("modeLive") : m==="wait" ? t("modeWait") : t("modeDemo");
+  if(m==="live"){
+    if(!LIVE.timer) LIVE.timer = setInterval(()=>liveRefresh(false), 4000);
+  } else {
+    if(LIVE.timer){ clearInterval(LIVE.timer); LIVE.timer=null; }
+  }
+}
+
+document.getElementById("modeBadge").onclick = ()=>{
+  if(LIVE.mode==="wait") return;
+  if(LIVE.mode==="demo"){
+    setMode("wait");
+    liveRefresh(true);
+  } else {
+    setMode("demo");
+    LIVE.reg.clear();
+    opps = Array.from({length:16}, makeOpp);
+    renderRows(true); renderCards(); renderStats(); renderRegime(); renderHealth();
+    toast(t("liveOff"));
+  }
+};
+
+/* ================= WATCHLIST + ALERTS + JOURNAL DATA ================= */
+const oppKey = o => o.coin+"|"+o.strat+"|"+o.exA+"|"+o.exB;
+const P = {
+  load(k, d){ try{ const v = store.get(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  save(k, v){ store.set(k, JSON.stringify(v)); }
+};
+const WATCH = new Set(P.load("at_watch", []));
+const ALERTS = P.load("at_alerts", {});          // key -> threshold %
+const J = P.load("at_journal", {active:[], closed:[]});
+let jSeq = P.load("at_jseq", 1);
+
+/* ---------- watchlist ---------- */
+function toggleWatch(o){
+  const k = oppKey(o);
+  WATCH.has(k) ? WATCH.delete(k) : WATCH.add(k);
+  P.save("at_watch", [...WATCH]);
+  renderRows(false);
+  if(state.openId) buildSheet();
+}
+
+/* ---------- alerts ---------- */
+function setAlert(o, thr){
+  const k = oppKey(o);
+  if(thr==null) delete ALERTS[k]; else ALERTS[k] = thr;
+  P.save("at_alerts", ALERTS);
+  if(thr!=null){
+    toast(tpl("alertSetT",{coin:o.coin, v:thr}));
+    if("Notification" in window && Notification.permission==="default") Notification.requestPermission();
+  }
+  if(state.openId) buildSheet();
+}
+function checkAlerts(){
+  for(const [k, thr] of Object.entries(ALERTS)){
+    const o = opps.find(x=>oppKey(x)===k);
+    if(o && o.spread >= thr){
+      const msg = tpl("alertFired",{coin:o.coin, a:o.exA, b:o.exB, v:fmt(o.spread)});
+      toast(msg);
+      try{ if("Notification" in window && Notification.permission==="granted") new Notification("Arbitrage Terminal", {body:msg}); }catch(e){}
+      delete ALERTS[k];
+      P.save("at_alerts", ALERTS);
+      if(state.openId) buildSheet();
+    }
+  }
+}
+
+/* ---------- journal ---------- */
+function trackTrade(o, deposit){
+  J.active.push({
+    id:jSeq++, key:oppKey(o), coin:o.coin, strat:o.strat, exA:o.exA, exB:o.exB,
+    entry:o.spread, fees:o.fees, dep:deposit||1000, t0:Date.now(), last:o.spread
+  });
+  P.save("at_journal", J); P.save("at_jseq", jSeq);
+  toast(t("jTracked"));
+  renderActive();
+  if(state.openId) buildSheet();
+}
+function tradePnl(tr){
+  const p = tr.entry - tr.last - tr.fees;
+  return {p, usd: tr.dep*p/100};
+}
+function closeTrade(id){
+  const i = J.active.findIndex(x=>x.id===id);
+  if(i<0) return;
+  const tr = J.active.splice(i,1)[0];
+  const {p, usd} = tradePnl(tr);
+  tr.exit = tr.last; tr.pnl = p; tr.usd = usd; tr.t1 = Date.now();
+  J.closed.unshift(tr);
+  P.save("at_journal", J);
+  toast(tpl("jClosedMsg",{p:(p>=0?"+":"")+fmt(p)+"% · "+(usd>=0?"+":"−")+"$"+fmt(Math.abs(usd))}));
+  renderActive();
+  if(document.getElementById("jour").classList.contains("show")) renderJournal();
+}
+function updateTrades(){
+  let changed=false;
+  for(const tr of J.active){
+    const o = opps.find(x=>oppKey(x)===tr.key);
+    if(o){ tr.last = o.spread; changed=true; }
+  }
+  if(changed) P.save("at_journal", J);
+}
+function renderActive(){
+  const wrap = document.getElementById("atrWrap");
+  if(!J.active.length){ wrap.style.display="none"; return; }
+  wrap.style.display="";
+  document.getElementById("atrTitle").textContent = t("atrTitle");
+  document.getElementById("atr").innerHTML = J.active.map(tr=>{
+    const {p, usd} = tradePnl(tr);
+    const col = p>=0?"var(--green)":"var(--red)";
+    return `
+    <div class="atr-card">
+      <div class="atr-head">${coinDot(tr.coin,20)}<span class="atr-pair">${tr.coin}/USDT</span><span class="atr-age num" data-age="${tr.t0}">${ageStr(tr.t0)}</span></div>
+      <div class="atr-route">${tr.exA} → ${tr.exB} · ${fmt(tr.entry)}% → ${fmt(tr.last)}%</div>
+      <div class="atr-bottom">
+        <span class="atr-pnl" style="color:${col}">${(p>=0?"+":"")+fmt(p)}% · ${(usd>=0?"+":"−")}$${fmt(Math.abs(usd))}</span>
+        <button class="atr-close" data-id="${tr.id}">${t("jClose")}</button>
+      </div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".atr-close").forEach(b=>b.onclick=e=>{e.stopPropagation(); closeTrade(+b.dataset.id);});
+}
+
+/* ---------- journal screen ---------- */
+function jourOpen(){
+  renderJournal();
+  document.getElementById("jour").classList.add("show");
+}
+function jourCloseFn(){
+  document.getElementById("jour").classList.remove("show");
+}
+document.getElementById("jourClose").onclick = ()=>{ jourCloseFn(); navSet("home"); };
+function renderJournal(){
+  document.getElementById("jourTitle").textContent = t("jTitle");
+  document.getElementById("jourSub").textContent = t("jSub");
+  const c = J.closed;
+  const total = c.reduce((a,x)=>a+x.usd,0);
+  const wins = c.filter(x=>x.pnl>0).length;
+  const avg = c.length ? c.reduce((a,x)=>a+x.pnl,0)/c.length : 0;
+  const rowHtml = (tr, live) => {
+    const p = live ? tradePnl(tr).p : tr.pnl;
+    const usd = live ? tradePnl(tr).usd : tr.usd;
+    const col = p>=0?"var(--green)":"var(--red)";
+    const dur = live ? ageStr(tr.t0) : Math.max(1, Math.round((tr.t1-tr.t0)/60000))+"m";
+    return `
+    <div class="j-row">
+      ${coinDot(tr.coin,28)}
+      <div class="j-info">
+        <div class="j-pair">${tr.coin}/USDT <span style="color:var(--txt-2);font-weight:400;font-size:11px">· ${STRATS[tr.strat].label}</span></div>
+        <div class="j-meta">${tr.exA} → ${tr.exB} · ${fmt(tr.entry)}% → ${fmt(live?tr.last:tr.exit)}% · ${dur}</div>
+      </div>
+      <div class="j-pnl" style="color:${col}">${(p>=0?"+":"")+fmt(p)}%<small>${(usd>=0?"+":"−")}$${fmt(Math.abs(usd))}</small></div>
+      ${live?`<button class="atr-close" data-id="${tr.id}">${t("jClose")}</button>`:""}
+    </div>`;
+  };
+  document.getElementById("jourBody").innerHTML = `
+    <div class="j-stats">
+      <div class="cell"><div class="cell-l">${t("jPnl")}</div><div class="cell-v" style="color:${total>=0?"var(--green)":"var(--red)"}">${(total>=0?"+":"−")}$${fmt(Math.abs(total))}</div></div>
+      <div class="cell"><div class="cell-l">${t("jWinrate")}</div><div class="cell-v">${c.length?Math.round(wins/c.length*100)+"%":"—"}</div></div>
+      <div class="cell"><div class="cell-l">${t("jTrades")}</div><div class="cell-v">${c.length}</div></div>
+      <div class="cell"><div class="cell-l">${t("jAvg")}</div><div class="cell-v" style="color:${avg>=0?"var(--green)":"var(--red)"}">${(avg>=0?"+":"")+fmt(avg)}%</div></div>
+    </div>
+    ${J.active.length?`<div class="j-sec">${t("jActiveT")}</div>`+J.active.map(tr=>rowHtml(tr,true)).join(""):""}
+    ${c.length?`<div class="j-sec">${t("jClosedT")}</div>`+c.map(tr=>rowHtml(tr,false)).join(""):""}
+    ${!c.length&&!J.active.length?`<div class="j-empty">${t("jEmpty")}</div>`:""}`;
+  document.querySelectorAll("#jourBody .atr-close").forEach(b=>b.onclick=()=>closeTrade(+b.dataset.id));
+}
+
+/* ================= SLIPPAGE ================= */
+const BOOKS = {
+  "Binance": async sym => { const d = await jget(`https://fapi.binance.com/fapi/v1/depth?symbol=${sym}USDT&limit=50`); return {asks:d.asks.map(x=>[+x[0],+x[1]]), bids:d.bids.map(x=>[+x[0],+x[1]])}; },
+  "Bybit":   async sym => { const d = await jget(`https://api.bybit.com/v5/market/orderbook?category=linear&symbol=${sym}USDT&limit=50`); return {asks:d.result.a.map(x=>[+x[0],+x[1]]), bids:d.result.b.map(x=>[+x[0],+x[1]])}; },
+  "OKX":     async sym => { const d = await jget(`https://www.okx.com/api/v5/market/books?instId=${sym}-USDT-SWAP&sz=50`); return {asks:d.data[0].asks.map(x=>[+x[0],+x[1]]), bids:d.data[0].bids.map(x=>[+x[0],+x[1]])}; }
+};
+function walkBook(levels, usd){
+  const best = levels[0][0];
+  let left = usd, cost = 0, qty = 0;
+  for(const [p,q] of levels){
+    const notional = p*q;
+    const take = Math.min(left, notional);
+    cost += take; qty += take/p; left -= take;
+    if(left<=0) break;
+  }
+  if(qty===0 || left>0) return null; /* book too thin */
+  const vwap = cost/qty;
+  return Math.abs(vwap-best)/best*100;
+}
+function slipFallback(o, usd){
+  const base = o.liq==="High" ? 0.02 : o.liq==="Medium" ? 0.05 : 0.12;
+  const scale = o.liq==="High" ? 8e5 : o.liq==="Medium" ? 3e5 : 1e5;
+  return base + usd/scale*0.1;
+}
+let slipReq = 0;
+async function updateSlippage(o, usd){
+  const el = document.getElementById("slipV");
+  if(!el) return;
+  const my = ++slipReq;
+  el.textContent = t("slipEst");
+  let total = null;
+  if(LIVE.mode==="live"){
+    try{
+      const half = usd/2;
+      const parts = await Promise.all([
+        BOOKS[o.exA] ? BOOKS[o.exA](o.coin).then(b=>walkBook(b.asks, half)) : Promise.resolve(null),
+        BOOKS[o.exB] ? BOOKS[o.exB](o.coin).then(b=>walkBook(b.bids, half)) : Promise.resolve(null)
+      ]);
+      if(my!==slipReq) return;
+      const pa = parts[0]!=null ? parts[0] : slipFallback(o, half)/2;
+      const pb = parts[1]!=null ? parts[1] : slipFallback(o, half)/2;
+      total = pa + pb;
+    }catch(e){ total = null; }
+  }
+  if(total==null) total = slipFallback(o, usd);
+  if(my!==slipReq) return;
+  el.textContent = fmt(total)+"%";
+  el.style.color = total < o.net*0.5 ? "var(--green)" : total < o.net ? "var(--yellow)" : "var(--red)";
+  const sub = document.getElementById("slipSub");
+  if(sub) sub.textContent = tpl("slipFor",{d:usd});
+}
+
+/* ================= MARKETS: FOREX & STOCKS MONITOR ================= */
+const MKT = {
+  fxPairs: [["EUR/USD","EUR",true],["GBP/USD","GBP",true],["USD/JPY","JPY",false],["USD/CHF","CHF",false],["AUD/USD","AUD",true]],
+  stocks: ["AAPL","NVDA","MSFT","TSLA","AMZN","META"],
+  finnhub: store.get("at_finnhub") || "",
+  fx:null, fxPrev:null, st:{}
+};
+const fxVal = (data, cur, inv) => inv ? 1/data.rates[cur] : data.rates[cur];
+
+async function fetchFx(){
+  try{
+    const today = await jget("https://api.frankfurter.app/latest?from=USD");
+    const d = new Date(Date.now() - 7*864e5).toISOString().slice(0,10);
+    const prev = await jget(`https://api.frankfurter.app/${d}?from=USD`).catch(()=>null);
+    MKT.fx = today; MKT.fxPrev = prev;
+  }catch(e){ MKT.fx = null; }
+  renderFx();
+}
+function renderFx(){
+  const el = document.getElementById("fxRows");
+  if(!MKT.fx){
+    el.innerHTML = `<div class="mkt-key" style="color:var(--txt-2);font-size:12.5px">${t("mktOffline")}</div>`;
+    return;
+  }
+  el.innerHTML = MKT.fxPairs.map(([name, cur, inv])=>{
+    const now = fxVal(MKT.fx, cur, inv);
+    const was = MKT.fxPrev ? fxVal(MKT.fxPrev, cur, inv) : null;
+    const chg = was ? (now-was)/was*100 : null;
+    const dec = cur==="JPY" ? 2 : 4;
+    return `
+    <div class="mkt-row">
+      <div><div class="mkt-name">${name}</div><div class="mkt-sub">${t("fxSub")} · ${MKT.fx.date}</div></div>
+      <div class="mkt-px">${now.toFixed(dec)}</div>
+      <div class="mkt-chg" style="color:${chg==null?"var(--txt-2)":chg>=0?"var(--green)":"var(--red)"}">${chg==null?"—":(chg>=0?"+":"")+chg.toFixed(2)+"%"}</div>
+    </div>`;
+  }).join("");
+}
+
+async function fetchStocks(){
+  if(!MKT.finnhub){ renderStocks(); return; }
+  try{
+    const rs = await Promise.all(MKT.stocks.map(sym =>
+      jget(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${encodeURIComponent(MKT.finnhub)}`).catch(()=>null)
+    ));
+    let any=false;
+    rs.forEach((q,i)=>{ if(q && q.c){ MKT.st[MKT.stocks[i]] = q; any=true; } });
+    if(!any && !Object.keys(MKT.st).length){ MKT.badKey = true; }
+    else MKT.badKey = false;
+  }catch(e){}
+  renderStocks();
+}
+function renderStocks(){
+  const el = document.getElementById("stRows");
+  if(!MKT.finnhub || (MKT.badKey && !Object.keys(MKT.st).length)){
+    el.innerHTML = `
+    <div class="mkt-key">
+      <div style="font-size:12.5px;color:var(--txt-2);line-height:1.5">${MKT.badKey?t("stBad"):t("stNeedKey")}<br>${t("stGet")}</div>
+      <input id="fhKey" type="text" placeholder="finnhub api key" value="">
+      <button class="btn btn-pri" style="width:100%" id="fhSave">${t("stSave")}</button>
+    </div>`;
+    document.getElementById("fhSave").onclick = ()=>{
+      MKT.finnhub = document.getElementById("fhKey").value.trim();
+      store.set("at_finnhub", MKT.finnhub);
+      MKT.badKey = false;
+      fetchStocks();
+    };
+    return;
+  }
+  el.innerHTML = MKT.stocks.map(sym=>{
+    const q = MKT.st[sym];
+    return `
+    <div class="mkt-row">
+      <div><div class="mkt-name">${sym}</div><div class="mkt-sub">NASDAQ · Finnhub</div></div>
+      <div class="mkt-px">${q?"$"+q.c.toFixed(2):"—"}</div>
+      <div class="mkt-chg" style="color:${!q?"var(--txt-2)":q.dp>=0?"var(--green)":"var(--red)"}">${q?(q.dp>=0?"+":"")+q.dp.toFixed(2)+"%":"—"}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderMarketsStatic(){
+  document.getElementById("mktTitle").textContent = t("mktTitle");
+  document.getElementById("mktWhy").textContent = t("mktWhy");
+  document.getElementById("goldNote").innerHTML = t("goldNote");
+  document.getElementById("fxTitle").textContent = t("fxTitle");
+  document.getElementById("fxRateL").textContent = t("fxRateL");
+  document.getElementById("stTitle").textContent = t("stTitle");
+  document.getElementById("stPriceL").textContent = t("stPriceL");
+  const ex = document.getElementById("mktExplain");
+  ex.innerHTML = `
+    <div class="art-block"><div class="art-h2">${t("exp1h")}</div><div class="art-p">${t("exp1p")}</div></div>
+    <div class="art-block"><div class="art-h2">${t("exp2h")}</div><div class="art-p">${t("exp2p")}</div></div>`;
+  renderFx(); renderStocks();
+}
+document.getElementById("mktWhy").onclick = ()=>{
+  const ex = document.getElementById("mktExplain");
+  ex.style.display = ex.style.display==="none" ? "" : "none";
+};
+setInterval(fetchFx, 600000);
+setInterval(()=>{ if(MKT.finnhub) fetchStocks(); }, 60000);
+fetchFx(); fetchStocks();
+
+/* ================= FEE SETTINGS ================= */
+(function(){
+  const btn = document.getElementById("feeBtn");
+  const menu = document.getElementById("menuFee");
+  const sync = ()=>menu.querySelectorAll(".menu-item").forEach(it=>it.classList.toggle("sel", +it.dataset.v===SETTINGS.taker));
+  btn.onclick = e=>{
+    e.stopPropagation();
+    const wasOpen = menu.classList.contains("show");
+    closeAllMenus();
+    if(!wasOpen){
+      document.getElementById("feeMenuL").textContent = t("feeMenu");
+      sync();
+      const r = btn.getBoundingClientRect();
+      menu.style.left = Math.min(r.left, window.innerWidth-235)+"px";
+      menu.style.top = (r.bottom+8)+"px";
+      menu.classList.add("show");
+    }
+  };
+  menu.querySelectorAll(".menu-item").forEach(it=>{
+    it.onclick = e=>{
+      e.stopPropagation(); closeAllMenus();
+      SETTINGS.taker = +it.dataset.v;
+      store.set("at_fee", String(SETTINGS.taker));
+      toast(tpl("feeChanged",{v:SETTINGS.taker, r:fmt(roundTrip())}));
+      if(LIVE.mode==="live") liveRefresh(false);
+      if(state.openId) buildSheet();
+    };
+  });
+})();
+
+/* ================= LANGUAGE ================= */
+function applyLang(l){
+  lang = I18N[l] ? l : "en";
+  store.set("at_lang", lang);
+  document.documentElement.lang = lang;
+  document.getElementById("langBtn").textContent = lang.toUpperCase();
+  document.querySelectorAll("#menuLang .menu-item").forEach(it=>it.classList.toggle("sel", it.dataset.v===lang));
+
+  /* static text */
+  document.getElementById("tTop").textContent = t("topOpp");
+  document.getElementById("seeAll").textContent = t("seeAll");
+  document.getElementById("tScan").textContent = t("scanner");
+  document.getElementById("pauseBtn").textContent = state.paused ? t("resume") : t("pause");
+  document.getElementById("segAll").textContent = t("all");
+  const th = document.querySelectorAll(".thead > div");
+  [th[0].textContent, th[1].textContent, th[2].textContent, th[3].textContent, th[4].textContent] =
+    [t("thInstr"), t("thFunding"), t("thVol"), t("thSpread"), t("thNet")];
+
+  /* chips (respect current state) */
+  const chipEx = document.getElementById("chipEx");
+  chipEx.firstChild.textContent = state.exchanges.size===EXCH.length ? t("chipEx")+" " : t("chipEx")+" · "+state.exchanges.size+" ";
+  const chipSp = document.getElementById("chipSpread");
+  chipSp.firstChild.textContent = state.minSpread>0 ? tpl("spreadGe",{v:state.minSpread})+" " : t("chipSpread")+" ";
+  const sortKey = {spread:"sortSpread", net:"sortNet", vol:"sortVol", fresh:"sortFresh"}[state.sort] || "sortSpread";
+  document.getElementById("chipSort").firstChild.textContent = t("chipSort")+t(sortKey)+" ";
+
+  /* menus */
+  document.querySelector("#menuEx .menu-label").textContent = t("mExch");
+  document.querySelector("#menuSpread .menu-label").textContent = t("mMinSpread");
+  document.querySelector('#menuSpread .menu-item[data-v="0"] span').textContent = t("any");
+  document.querySelector("#menuSort .menu-label").textContent = t("mSortBy");
+  document.querySelector('#menuSort .menu-item[data-v="spread"] span').textContent = t("sortSpread");
+  document.querySelector('#menuSort .menu-item[data-v="net"] span').textContent = t("sortNet");
+  document.querySelector('#menuSort .menu-item[data-v="vol"] span').textContent = t("sortVol");
+  document.querySelector('#menuSort .menu-item[data-v="fresh"] span').textContent = t("sortFresh");
+
+  /* welcome + tutorial */
+  ["wTitle","wSub","f1t","f1d","f2t","f2d","f3t","f3d"].forEach(id=>{
+    document.getElementById(id).textContent = t(id);
+  });
+  document.getElementById("tourStart").textContent = t("takeTour");
+  document.getElementById("tourSkip").textContent = t("explore");
+  document.getElementById("tutEnd").textContent = t("skip");
+
+  /* nav + academy + mode */
+  document.getElementById("navHomeL").textContent = t("navHome");
+  document.getElementById("navScanL").textContent = t("navScan");
+  document.getElementById("navSimL").textContent = t("navSim");
+  document.getElementById("navAcadL").textContent = t("navAcad");
+  document.getElementById("navJourL").textContent = t("navJour");
+  renderMarketsStatic();
+  document.getElementById("chipWatch").textContent = "★";
+  renderActive();
+  if(document.getElementById("jour").classList.contains("show")) renderJournal();
+  document.getElementById("modeTxt").textContent = LIVE.mode==="live" ? t("modeLive") : LIVE.mode==="wait" ? t("modeWait") : t("modeDemo");
+  if(document.getElementById("acad").classList.contains("show")){
+    if(acadIdx>=0) renderAcadArticle(acadIdx); else renderAcadList();
+  }
+
+  /* simulator */
+  document.getElementById("simPromoT").textContent = t("simPromoT");
+  document.getElementById("simPromoD").textContent = t("simPromoD");
+  document.getElementById("simPromoBtn").textContent = t("simPromoBtn");
+  if(document.getElementById("stScenarios").classList.contains("on")){
+    renderScenarios();
+    document.getElementById("simTitle").textContent = t("simPick");
+    document.getElementById("simSub").textContent = t("simSubPick");
+  } else if(document.getElementById("stPlay").classList.contains("on")){
+    renderSimTrade();
+  }
+
+  /* live re-render */
+  renderStats();
+  renderRegime();
+  renderCards();
+  renderRows(false);
+  if(state.openId) buildSheet();
+  if(tutIdx>=0) stepTour(tutIdx);
+}
+
+/* lang menu */
+(function(){
+  const btn = document.getElementById("langBtn");
+  const menu = document.getElementById("menuLang");
+  btn.onclick = e=>{
+    e.stopPropagation();
+    const wasOpen = menu.classList.contains("show");
+    closeAllMenus();
+    if(!wasOpen){
+      const r = btn.getBoundingClientRect();
+      menu.style.left = Math.min(r.left, window.innerWidth-180)+"px";
+      menu.style.top = (r.bottom+8)+"px";
+      menu.classList.add("show");
+    }
+  };
+  menu.querySelectorAll(".menu-item").forEach(it=>{
+    it.onclick = e=>{ e.stopPropagation(); closeAllMenus(); applyLang(it.dataset.v); };
+  });
+})();
+
+/* first visit */
+applyLang(store.get("at_lang") || "en");
+if(!store.get("at_tour_seen")){
+  setTimeout(showWelcome, 700);
+}
+
+/* ================= INIT ================= */
+renderActive();
+renderStats();
+renderRegime();
+renderHealth();
+renderCards();
+renderRows(true);
+</script>
+
+</body>
+</html>
