@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LITORAL Hotel &amp; Resort — A place where time slows down.</title>
+<meta name="description" content="LITORAL Hotel & Resort on the Bodrum Peninsula — a quiet coastal escape for people who need to stop, breathe, and do nothing at all for a while.">
+<meta property="og:title" content="LITORAL Hotel &amp; Resort">
+<meta property="og:description" content="A place where time slows down.">
+<meta property="og:image" content="assets/images/hero.webp">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16.png">
+<link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,340;1,9..144,420&family=Manrope:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="global-grade" aria-hidden="true"></div>
+  <div class="breathe-vignette" aria-hidden="true"></div>
+  <div class="ch2-lightbox" id="ch2Lightbox">
+    <button type="button" class="ch2-lightbox-close" id="ch2LightboxClose" aria-label="Close">&times;</button>
+    <img class="ch2-lightbox-img" id="ch2LightboxImg" alt="">
+    <p class="ch2-lightbox-caption" id="ch2LightboxCaption"></p>
+  </div>
+
+  <button type="button" class="silence-btn" id="silenceBtn" aria-label="Toggle silence mode">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+      <circle cx="7.5" cy="7.5" r="6.5" stroke="var(--gold)" stroke-width="1"/>
+      <circle cx="7.5" cy="7.5" r="2" fill="var(--gold)"/>
+    </svg>
+  </button>
+  <span class="silence-hint">tap anywhere to return</span>
+
+  <div class="cover" id="cover"></div>
+
+  <button type="button" class="nav-toggle" id="navToggle" aria-label="Open menu" aria-expanded="false">
+    <svg class="nav-icon-menu" width="18" height="14" viewBox="0 0 18 14" fill="none">
+      <line x1="0" y1="1" x2="18" y2="1" stroke="var(--sand)" stroke-width="1.5"/>
+      <line x1="0" y1="7" x2="13" y2="7" stroke="var(--sand)" stroke-width="1.5"/>
+      <line x1="0" y1="13" x2="18" y2="13" stroke="var(--sand)" stroke-width="1.5"/>
+    </svg>
+    <svg class="nav-icon-close" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <line x1="1" y1="1" x2="15" y2="15" stroke="var(--sand)" stroke-width="1.5"/>
+      <line x1="15" y1="1" x2="1" y2="15" stroke="var(--sand)" stroke-width="1.5"/>
+    </svg>
+  </button>
+
+  <div class="nav-backdrop" id="navBackdrop"></div>
+
+  <nav class="nav-menu" id="navMenu" aria-hidden="true">
+    <ul class="nav-links">
+      <li>
+        <a href="#" data-scroll="1"><span class="nav-index">01</span><span class="nav-label">The Hotel</span></a>
+        <span class="nav-mood">Where mornings begin slow.</span>
+      </li>
+      <li>
+        <a href="#" data-scroll="4"><span class="nav-index">02</span><span class="nav-label">Rooms &amp; Suites</span></a>
+        <span class="nav-mood">Waking up to the sea.</span>
+      </li>
+      <li>
+        <a href="#" data-scroll="4b"><span class="nav-index">03</span><span class="nav-label">Dining</span></a>
+        <span class="nav-mood">The table, lit by evening.</span>
+      </li>
+      <li>
+        <a href="#" data-scroll="2"><span class="nav-index">04</span><span class="nav-label">The Coast</span></a>
+        <span class="nav-mood">Stone steps into the water.</span>
+      </li>
+      <li>
+        <a href="#contact" data-scroll="contact"><span class="nav-index">05</span><span class="nav-label">Contact</span></a>
+        <span class="nav-mood">Speak to someone who's there.</span>
+      </li>
+    </ul>
+    <a href="#booking" class="nav-book" data-scroll="booking">Book Now</a>
+    <button type="button" class="nav-mute" id="navMute" aria-label="Mute sound" aria-pressed="false">
+      <svg id="muteIconOn" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M2 6H5L9 3V13L5 10H2V6Z" fill="var(--muted)"/>
+        <path d="M11.5 5.5C12.5 6.5 12.5 9.5 11.5 10.5" stroke="var(--muted)" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <svg id="muteIconOff" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none">
+        <path d="M2 6H5L9 3V13L5 10H2V6Z" fill="var(--muted)"/>
+        <path d="M11 5.5L14 8.5M14 5.5L11 8.5" stroke="var(--muted)" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <span id="navMuteLabel">Sound On</span>
+    </button>
+    <div class="nav-clock">
+      <span class="nav-clock-time" id="navClockTime">--:--</span>
+      <span class="nav-clock-label">Litoral, right now</span>
+    </div>
+  </nav>
+
+  <div class="scene">
+    <img class="photo-bg" id="photoBg" alt="" aria-hidden="true">
+    <img class="photo" id="photo" alt="LITORAL Hotel &amp; Resort at dusk, seen from the sea">
+
+    <img class="photo-mobile" id="photoDawn" alt="LITORAL Hotel &amp; Resort at dawn">
+    <img class="photo-mobile" id="photoDay" alt="LITORAL Hotel &amp; Resort by day">
+    <img class="photo-mobile" id="photoDusk" alt="LITORAL Hotel &amp; Resort at dusk">
+    <img class="photo-mobile" id="photoNight" alt="LITORAL Hotel &amp; Resort under a full moon">
+    <canvas class="hero-shimmer" id="heroShimmer" aria-hidden="true"></canvas>
+
+    <div class="photo-grade"></div>
+    <canvas id="grain"></canvas>
+
+    <div class="logo-halo" id="logoHalo"></div>
+    <div class="logo" id="logo">
+      <img id="logoImg" alt="LITORAL Hotel &amp; Resort">
+    </div>
+
+    <div class="content">
+      <h1 id="line1">You're tired.</h1>
+      <p class="sub" id="sub">There's a place where that finally stops mattering.</p>
+
+      <div class="explore" id="explore">
+        <button type="button" class="explore-toggle" id="exploreToggle">Explore Litoral</button>
+        <div class="explore-options" id="exploreOptions">
+          <button type="button" data-mode="dawn">Dawn</button>
+          <button type="button" data-mode="day">Day</button>
+          <button type="button" data-mode="dusk">Dusk</button>
+          <button type="button" data-mode="night">Night</button>
+          <button type="button" data-mode="live" class="is-live">Live</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="live-clock" id="liveClock">
+      <span class="live-time" id="liveTime">--:--</span>
+      <span class="live-meta" id="liveSea"></span>
+    </div>
+
+    <div class="sunset-widget" id="sunsetWidget">
+      <span class="sunset-text" id="sunsetText"></span>
+      <button type="button" class="sunset-btn" id="sunsetBtn">Watch the Sunset</button>
+    </div>
+
+
+    <div class="scroll-cue" id="scrollCue" aria-hidden="true">
+      <svg width="20" height="28" viewBox="0 0 20 28" fill="none">
+        <path d="M10 1 L10 23" stroke="var(--gold)" stroke-width="1" opacity="0.6"/>
+        <path d="M4 18 L10 24 L16 18" stroke="var(--gold)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
+
+  <section class="ch1-wrapper" id="ch1Wrapper" data-chapter="1" aria-label="Chapter I">
+    <button type="button" class="gallery-arrow gallery-arrow-prev" data-track="ch1Track" aria-label="Previous">‹</button>
+    <button type="button" class="gallery-arrow gallery-arrow-next" data-track="ch1Track" aria-label="Next">›</button>
+    <div class="ch1-header">
+      <span class="ch1-eyebrow">Chapter I —</span>
+      <h2 class="ch1-heading">You're tired.</h2>
+    </div>
+
+    <button type="button" class="ch1-skip" id="ch1Skip">Skip →</button>
+
+    <div class="ch1-dots" id="ch1Dots"></div>
+
+    <div class="ch1-track" id="ch1Track">
+      <div class="ch1-panel" data-panel="0">
+        <img class="ch1-panel-photo" id="ch1Img0" alt="">
+        <img class="ch1-panel-logo" id="ch1Logo0" alt="">
+        <div class="ch1-panel-grade"></div>
+        <p class="ch1-phrase">When did you last do nothing at all?</p>
+        <span class="ch1-swipe-hint" aria-hidden="true">swipe →</span>
+      </div>
+      <div class="ch1-panel" data-panel="1">
+        <img class="ch1-panel-photo" id="ch1Img1" alt="">
+        <img class="ch1-panel-logo" id="ch1Logo1" alt="">
+        <div class="ch1-panel-grade"></div>
+        <p class="ch1-phrase">What are you still carrying?</p>
+      </div>
+      <div class="ch1-panel" data-panel="2">
+        <img class="ch1-panel-photo" id="ch1Img2" alt="">
+        <img class="ch1-panel-logo" id="ch1Logo2" alt="">
+        <div class="ch1-panel-grade"></div>
+        <p class="ch1-phrase">How much of you is still somewhere else?</p>
+      </div>
+      <div class="ch1-panel" data-panel="3">
+        <img class="ch1-panel-photo" id="ch1Img3" alt="">
+        <img class="ch1-panel-logo" id="ch1Logo3" alt="">
+        <div class="ch1-panel-grade"></div>
+        <p class="ch1-phrase">What would it feel like to simply stop?</p>
+      </div>
+      <div class="ch1-panel" data-panel="4">
+        <img class="ch1-panel-photo" id="ch1Img4" alt="">
+        <img class="ch1-panel-logo" id="ch1Logo4" alt="">
+        <div class="ch1-panel-grade"></div>
+        <p class="ch1-phrase">Some places don't ask anything of you at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch2-wrapper" data-chapter="2" aria-label="Chapter II — The place you remember">
+    <button type="button" class="gallery-arrow gallery-arrow-prev" data-track="ch2Track" aria-label="Previous">‹</button>
+    <button type="button" class="gallery-arrow gallery-arrow-next" data-track="ch2Track" aria-label="Next">›</button>
+    <div class="ch2-track" id="ch2Track">
+      <div class="ch2-panel" data-panel="0">
+        <img class="ch2-image" id="ch2ImgBeach" alt="The cove at dusk">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">A place you've been before — even if you haven't.</p>
+        <span class="ch2-swipe-hint" aria-hidden="true">swipe →</span>
+      </div>
+      <div class="ch2-panel" data-panel="3">
+        <img class="ch2-image" id="ch2ImgPoolNight" alt="The pool at night">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">The water is still, even when you're not.</p>
+      </div>
+      <div class="ch2-panel" data-panel="4">
+        <img class="ch2-image" id="ch2ImgInfinity" alt="The infinity pool at sunset">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">Where the pool and the sea forget where one ends.</p>
+      </div>
+      <div class="ch2-panel" data-panel="5">
+        <img class="ch2-image" id="ch2ImgLounge" alt="The lounge at night">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">No one is in a hurry here.</p>
+      </div>
+      <div class="ch2-panel" data-panel="6">
+        <img class="ch2-image" id="ch2ImgBar" alt="The bar at dusk">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">Someone will always have your table.</p>
+      </div>
+      <div class="ch2-panel" data-panel="7">
+        <img class="ch2-image" id="ch2ImgDining" alt="The dining room at sunset">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">Dinner, and the whole coast for company.</p>
+      </div>
+      <div class="ch2-panel" data-panel="8">
+        <img class="ch2-image" id="ch2ImgSpa" alt="The spa pool">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">Even your thoughts can rest here.</p>
+      </div>
+      <div class="ch2-panel" data-panel="9">
+        <img class="ch2-image" id="ch2ImgMassage" alt="The spa treatment room">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">The last thing you let go of, here.</p>
+      </div>
+      <div class="ch2-panel" data-panel="10">
+        <img class="ch2-image" id="ch2ImgGym" alt="The gym at sunrise">
+        <div class="ch2-grade"></div>
+        <p class="ch2-caption">Or, if you'd rather — start again.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch3-wrapper" data-chapter="3" aria-label="Chapter III — One day at LITORAL">
+    <button type="button" class="gallery-arrow gallery-arrow-prev" data-track="ch3Track" aria-label="Previous">‹</button>
+    <button type="button" class="gallery-arrow gallery-arrow-next" data-track="ch3Track" aria-label="Next">›</button>
+    <div class="ch3-intro">
+      <img class="ch3-intro-bg" id="ch3IntroBg" alt="" aria-hidden="true" style="display:none;">
+      <span class="ch3-intro-eyebrow">Chapter III</span>
+      <h2 class="ch3-intro-title">One Day at LITORAL</h2>
+      <span class="ch3-intro-hint">swipe to see the full day →</span>
+    </div>
+
+    <div class="ch3-track" id="ch3Track">
+      <div class="ch3-card" data-vibe="sunrise">
+        <img class="ch3-card-photo" id="ch3Img0" alt="Sunrise on the beach">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">06:30</span>
+          <span class="ch3-card-label">Sunrise</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">The day begins with the sea.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="breakfast">
+        <img class="ch3-card-photo" id="ch3ImgBreakfast" alt="Breakfast on the terrace">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">08:15</span>
+          <span class="ch3-card-label">Breakfast</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">Coffee, pastries, and no plans.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="midday">
+        <img class="ch3-card-photo" id="ch3Img1" alt="The pool at midday">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">13:15</span>
+          <span class="ch3-card-label">Midday</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">Endless blue and slow moments.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="lunch">
+        <img class="ch3-card-photo" id="ch3Img2" alt="Lunch by the sea">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">15:30</span>
+          <span class="ch3-card-label">Lunch</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">Mediterranean flavors made for sharing.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="goldenhour">
+        <img class="ch3-card-photo" id="ch3Img3" alt="Golden hour cocktails">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">19:45</span>
+          <span class="ch3-card-label">Golden Hour</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">Aperitivo, laughter and ocean views.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="dinner">
+        <img class="ch3-card-photo" id="ch3ImgDinner" alt="Dinner by the sea">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">20:30</span>
+          <span class="ch3-card-label">Dinner</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line">The table is already set.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+      <div class="ch3-card" data-vibe="nightfall">
+        <img class="ch3-card-photo" id="ch3Img4" alt="Nightfall on the terrace">
+        <div class="ch3-card-grade"></div>
+        <div class="ch3-card-content">
+          <span class="ch3-card-time">22:30</span>
+          <span class="ch3-card-label">Nightfall</span>
+          <div class="ch3-card-divider"></div>
+          <p class="ch3-card-line" id="nightfallLine">The night is young, and so are we.</p>
+        </div>
+        <span class="ch3-card-icon" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="6" width="2" height="6" fill="var(--gold)"/>
+          <rect x="6" y="2" width="2" height="10" fill="var(--gold)"/>
+          <rect x="11" y="8" width="2" height="4" fill="var(--gold)"/>
+        </svg></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch4-wrapper" data-chapter="4" aria-label="Chapter IV — Stay">
+    <div class="ch4-hero">
+      <img class="ch4-hero-photo" id="ch4HeroImg" alt="A room with a sea view">
+      <div class="ch4-hero-grade"></div>
+      <div class="ch4-hero-content">
+        <span class="ch4-hero-eyebrow">Chapter IV — Stay</span>
+        <h2 class="ch4-hero-title">Every room begins with the sea.</h2>
+        <a href="#" class="ch4-spend-day" id="ch4SpendDay">Not ready to choose? Spend one day first →</a>
+      </div>
+    </div>
+
+    <div class="ch4-cards">
+      <div class="ch4-card">
+        <div class="ch4-card-photo" data-pano="ch4Room0" data-name="Deluxe Sea View">
+          <img id="ch4Room0" alt="Deluxe Sea View room">
+          <div class="ch4-card-photo-grade"></div>
+          <span class="ch4-card-pan-hint">⤢ Look around</span>
+        </div>
+        <div class="ch4-card-body">
+          <div class="ch4-card-top-row">
+            <h3 class="ch4-card-name">Deluxe Sea View</h3>
+            <span class="ch4-card-price">€420<span>/ night</span></span>
+          </div>
+          <ul class="ch4-card-features"><li>42 m²</li><li>2 guests</li><li>King-size bed</li><li>Private terrace</li><li>Ocean view</li><li>Breakfast included</li></ul>
+          <a href="#" class="ch4-card-btn">View Details</a>
+        </div>
+      </div>
+      <div class="ch4-card">
+        <div class="ch4-card-photo" data-pano="ch4Room1" data-name="Junior Suite">
+          <img id="ch4Room1" alt="Junior Suite room">
+          <div class="ch4-card-photo-grade"></div>
+          <span class="ch4-card-pan-hint">⤢ Look around</span>
+        </div>
+        <div class="ch4-card-body">
+          <div class="ch4-card-top-row">
+            <h3 class="ch4-card-name">Junior Suite</h3>
+            <span class="ch4-card-price">€690<span>/ night</span></span>
+          </div>
+          <ul class="ch4-card-features"><li>60 m²</li><li>Up to 3 guests</li><li>King-size bed</li><li>Separate lounge</li><li>Private balcony</li><li>Breakfast included</li><li>Minibar</li></ul>
+          <a href="#" class="ch4-card-btn">View Details</a>
+        </div>
+      </div>
+      <div class="ch4-card">
+        <div class="ch4-card-photo" data-pano="ch4Room2" data-name="Private Villa">
+          <img id="ch4Room2" alt="Private Villa">
+          <div class="ch4-card-photo-grade"></div>
+          <span class="ch4-card-pan-hint">⤢ Look around</span>
+        </div>
+        <div class="ch4-card-body">
+          <div class="ch4-card-top-row">
+            <h3 class="ch4-card-name">Private Villa</h3>
+            <span class="ch4-card-price">€1,250<span>/ night</span></span>
+          </div>
+          <ul class="ch4-card-features"><li>120 m²</li><li>Up to 2 guests</li><li>Private pool</li><li>King-size bed</li><li>Oceanfront</li><li>Butler service</li><li>Breakfast included</li></ul>
+          <a href="#" class="ch4-card-btn">View Details</a>
+        </div>
+      </div>
+      <div class="ch4-card">
+        <div class="ch4-card-photo" data-pano="ch4Room3" data-name="Two Bedroom Suite">
+          <img id="ch4Room3" alt="Two Bedroom Suite">
+          <div class="ch4-card-photo-grade"></div>
+          <span class="ch4-card-pan-hint">⤢ Look around</span>
+        </div>
+        <div class="ch4-card-body">
+          <div class="ch4-card-top-row">
+            <h3 class="ch4-card-name">Two Bedroom Suite</h3>
+            <span class="ch4-card-price">€980<span>/ night</span></span>
+          </div>
+          <ul class="ch4-card-features"><li>110 m²</li><li>Up to 4 guests</li><li>2 Bedrooms</li><li>Living area</li><li>Private terrace</li><li>Breakfast included</li><li>Minibar</li></ul>
+          <a href="#" class="ch4-card-btn">View Details</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ch4-pano" id="ch4Pano" aria-hidden="true">
+    <span class="ch4-pano-name" id="ch4PanoName"></span>
+    <button type="button" class="ch4-pano-close" id="ch4PanoClose" aria-label="Close">&times;</button>
+    <div class="ch4-pano-viewport" id="ch4PanoViewport">
+      <img class="ch4-pano-img" id="ch4PanoImg" alt="" draggable="false">
+    </div>
+    <span class="ch4-pano-hint">← drag to look around →</span>
+  </div>
+
+  <section class="rest-wrapper" data-chapter="4b" aria-label="The Restaurant">
+    <div class="rest-intro">
+      <span class="rest-eyebrow">The Restaurant</span>
+      <h2 class="rest-title">Mediterranean, from the coast to your table.</h2>
+      <p class="rest-desc">Prepared daily from local ingredients — breakfast to dinner, all included in your stay.</p>
+    </div>
+
+    <div class="rest-cards-grid">
+      <div class="rest-card">
+        <div class="rest-card-head">
+          <div>
+            <div class="rest-card-title-wrap">
+              <span class="rest-card-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3.2" stroke="var(--gold)" stroke-width="1.1"/><path d="M8 0.8V2.6M8 13.4V15.2M15.2 8H13.4M2.6 8H0.8M13 3L11.7 4.3M4.3 11.7L3 13M13 13L11.7 11.7M4.3 4.3L3 3" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg></span>
+              <h3 class="rest-card-name">Breakfast</h3>
+            </div>
+            <span class="rest-card-time">07:00 – 10:30</span>
+            <p class="rest-card-desc">Fresh pastries, eggs, seasonal fruits & specialty coffee.</p>
+          </div>
+          <button type="button" class="rest-card-btn" data-target="restBfGallery">See Menu</button>
+        </div>
+        <div class="rest-gallery" id="restBfGallery">
+          <div class="rest-gallery-track">
+          <div class="rest-dish">
+            <img id="restEggs" alt="Eggs Benedict">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Eggs Benedict</p>
+              <p class="rest-dish-desc">Poached eggs, toasted brioche, smoked salmon, hollandaise.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restAvocado" alt="Avocado Toast">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Avocado Toast</p>
+              <p class="rest-dish-desc">Sourdough, smashed avocado, feta, cherry tomatoes.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restCroissant" alt="French Croissant Set">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">French Croissant Set</p>
+              <p class="rest-dish-desc">Fresh croissants, seasonal jam, butter, orange juice.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restYogurt" alt="Greek Yogurt Bowl">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Greek Yogurt Bowl</p>
+              <p class="rest-dish-desc">Greek yogurt, berries, honey, homemade granola.</p>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="rest-card">
+        <div class="rest-card-head">
+          <div>
+            <div class="rest-card-title-wrap">
+              <span class="rest-card-icon" aria-hidden="true"><svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M1 5.5C2.5 3.8 4 3.8 5.5 5.5C7 7.2 8.5 7.2 10 5.5C11.5 3.8 13 3.8 14.5 5.5C16 7.2 17 7.2 17 7.2" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/><path d="M1 10C2.5 8.3 4 8.3 5.5 10C7 11.7 8.5 11.7 10 10C11.5 8.3 13 8.3 14.5 10C16 11.7 17 11.7 17 11.7" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/></svg></span>
+              <h3 class="rest-card-name">Lunch</h3>
+            </div>
+            <span class="rest-card-time">12:30 – 16:00</span>
+            <p class="rest-card-desc">Mediterranean seafood, handmade pasta & light summer dishes.</p>
+          </div>
+          <button type="button" class="rest-card-btn" data-target="restLnGallery">See Menu</button>
+        </div>
+        <div class="rest-gallery" id="restLnGallery">
+          <div class="rest-gallery-track">
+          <div class="rest-dish">
+            <img id="restBurrata" alt="Burrata & Tomatoes">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Burrata & Tomatoes</p>
+              <p class="rest-dish-desc">Creamy burrata, heirloom tomatoes, basil, olive oil.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restLinguine" alt="Seafood Linguine">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Seafood Linguine</p>
+              <p class="rest-dish-desc">Fresh mussels, prawns, squid, handmade pasta.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restSeabass" alt="Mediterranean Sea Bass">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Mediterranean Sea Bass</p>
+              <p class="rest-dish-desc">Grilled sea bass, lemon, vegetables, herbs.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restRisotto" alt="Truffle Risotto">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Truffle Risotto</p>
+              <p class="rest-dish-desc">Creamy risotto finished with fresh black truffle.</p>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="rest-card">
+        <div class="rest-card-head">
+          <div>
+            <div class="rest-card-title-wrap">
+              <span class="rest-card-icon" aria-hidden="true"><svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M4 9C4 6.24 5.79 4 9 4C12.21 4 14 6.24 14 9" stroke="var(--gold)" stroke-width="1.1"/><path d="M1 9H17M6.5 1.5L7.5 2.7M11.5 1.5L10.5 2.7" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/><path d="M2.5 12H15.5" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round" opacity="0.5"/></svg></span>
+              <h3 class="rest-card-name">Dinner</h3>
+            </div>
+            <span class="rest-card-time">18:30 – 22:30</span>
+            <p class="rest-card-desc">Fine dining experience with the chef's signature menu.</p>
+          </div>
+          <button type="button" class="rest-card-btn" data-target="restDnGallery">See Menu</button>
+        </div>
+        <div class="rest-gallery" id="restDnGallery">
+          <div class="rest-gallery-track">
+          <div class="rest-dish">
+            <img id="restBeef" alt="Beef Tenderloin">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Beef Tenderloin</p>
+              <p class="rest-dish-desc">Prime beef tenderloin, potato purée, seasonal vegetables.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restLobster" alt="Lobster Linguine">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Lobster Linguine</p>
+              <p class="rest-dish-desc">Fresh lobster, handmade pasta, bisque sauce.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restLamb" alt="Lamb Rack">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Lamb Rack</p>
+              <p class="rest-dish-desc">Herb-crusted lamb, rosemary potatoes.</p>
+            </div>
+          </div>
+          <div class="rest-dish">
+            <img id="restFondant" alt="Chocolate Fondant">
+            <div class="rest-dish-body">
+              <p class="rest-dish-name">Chocolate Fondant</p>
+              <p class="rest-dish-desc">Warm chocolate center, vanilla bean ice cream.</p>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      <div class="rest-card">
+        <div class="rest-card-head">
+          <div>
+            <div class="rest-card-title-wrap">
+              <span class="rest-card-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1L9.3 6.7L15 8L9.3 9.3L8 15L6.7 9.3L1 8L6.7 6.7L8 1Z" stroke="var(--gold)" stroke-width="1" stroke-linejoin="round"/></svg></span>
+              <h3 class="rest-card-name">All Inclusive</h3>
+            </div>
+            <p class="rest-card-desc">Everything included — from morning coffee to evening cocktails.</p>
+          </div>
+        </div>
+        <ul class="rest-check">
+          <li>Breakfast Buffet</li>
+          <li>À la carte Lunch</li>
+          <li>Gourmet Dinner</li>
+          <li>Unlimited Soft Drinks</li>
+          <li>Premium Coffee</li>
+          <li>Wine &amp; Beer</li>
+          <li>Signature Cocktails</li>
+          <li>Fresh Juices</li>
+          <li>Beach &amp; Pool Service</li>
+          <li>Late Night Lounge</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="amen-wrapper" aria-label="Amenities">
+    <p class="amen-title">Amenities</p>
+    <div class="amen-grid">
+      <div class="amen-item" data-amen-photo="spa" data-amen-name="Spa &amp; Wellness">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M6 14C6 10 8.5 7 11 5C13.5 7 16 10 16 14C16 17 13.8 19 11 19C8.2 19 6 17 6 14Z" stroke="var(--gold)" stroke-width="1.1"/><path d="M4 19H18" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        <span>Spa &amp; Wellness</span>
+      </div>
+      <div class="amen-item" data-amen-photo="gym" data-amen-name="Fitness Center">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="6" r="2.2" stroke="var(--gold)" stroke-width="1.1"/><path d="M6 19V15C6 12 8 10.5 11 10.5C14 10.5 16 12 16 15V19" stroke="var(--gold)" stroke-width="1.1"/><path d="M3 19H19" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        <span>Fitness Center</span>
+      </div>
+      <div class="amen-item" data-amen-photo="water" data-amen-name="Water Sports">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 13C4 11 6 11 8 13C10 15 12 15 14 13C16 11 18 11 20 13" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/><path d="M4 17C6 15 8 15 10 17C12 19 14 19 16 17" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/><path d="M11 3V11" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        <span>Water Sports</span>
+      </div>
+      <div class="amen-item" data-amen-photo="billiards" data-amen-name="Billiards Lounge">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="11" rx="1" stroke="var(--gold)" stroke-width="1.1"/><circle cx="7" cy="11.5" r="1" fill="var(--gold)"/><circle cx="15" cy="9.5" r="1" fill="var(--gold)"/><circle cx="12" cy="13.5" r="1" fill="var(--gold)"/></svg>
+        <span>Billiards Lounge</span>
+      </div>
+      <div class="amen-item" data-amen-photo="kids" data-amen-name="Kids Club">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="3" stroke="var(--gold)" stroke-width="1.1"/><path d="M11 10L9 16H13L11 10Z" stroke="var(--gold)" stroke-width="1.1" stroke-linejoin="round"/><path d="M5 19C5 16 7.5 14 11 14C14.5 14 17 16 17 19" stroke="var(--gold)" stroke-width="1.1"/></svg>
+        <span>Kids Club</span>
+      </div>
+      <div class="amen-item" data-amen-photo="wine" data-amen-name="Wine Cellar">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2C13 4 14 6.5 14 9C14 11.2 12.7 13 11 13C9.3 13 8 11.2 8 9C8 6.5 9 4 11 2Z" stroke="var(--gold)" stroke-width="1.1"/><path d="M11 13V19M8 19H14" stroke="var(--gold)" stroke-width="1.1" stroke-linecap="round"/></svg>
+        <span>Wine Cellar</span>
+      </div>
+      <div class="amen-item" data-amen-photo="concierge" data-amen-name="Concierge">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="7" r="3" stroke="var(--gold)" stroke-width="1.1"/><path d="M4 19C4 15 7 13 11 13C15 13 18 15 18 19" stroke="var(--gold)" stroke-width="1.1"/></svg>
+        <span>Concierge</span>
+      </div>
+      <div class="amen-item" data-amen-photo="roomservice" data-amen-name="24h Room Service">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="4" y="9" width="14" height="9" rx="1" stroke="var(--gold)" stroke-width="1.1"/><path d="M7 9V6C7 4.3 8.6 3 11 3C13.4 3 15 4.3 15 6V9" stroke="var(--gold)" stroke-width="1.1"/></svg>
+        <span>24h Room Service</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="amen-lightbox" id="amenLightbox" aria-hidden="true">
+    <span class="amen-lb-name" id="amenLbName"></span>
+    <button type="button" class="amen-lightbox-close" id="amenLightboxClose" aria-label="Close">&times;</button>
+    <div class="amen-lb-track" id="amenLbTrack"></div>
+    <span class="amen-lb-hint">swipe for more →</span>
+    <p class="amen-lb-soon">Photos coming soon</p>
+  </div>
+
+  <section class="cta-wrapper" data-chapter="5" aria-label="Book Your Stay">
+    <img class="cta-photo" id="ctaPhoto" alt="Balcony at evening">
+    <div class="cta-grade"></div>
+    <div class="cta-content">
+      <h2 class="cta-title">One decision.<br>Thousands of quiet mornings.</h2>
+      <a href="#booking" class="cta-btn" id="ctaBookBtn">Book Your Stay</a>
+    </div>
+  </section>
+
+  <section class="booking-wrapper" id="booking" aria-label="Booking">
+    <div class="booking-intro">
+      <span class="booking-eyebrow">Chapter V — Booking</span>
+      <h2 class="booking-title">Reserve your stay.</h2>
+    </div>
+
+    <div class="wiz-dots" id="wizDots">
+      <span class="wiz-dot is-active" data-step="0"></span>
+      <span class="wiz-dot" data-step="1"></span>
+      <span class="wiz-dot" data-step="2"></span>
+      <span class="wiz-dot" data-step="3"></span>
+    </div>
+
+    <div class="booking-form">
+      <div class="wiz-steps" id="wizSteps">
+
+        <div class="wiz-step is-active" data-step="0">
+          <p class="wiz-step-label">01 — When</p>
+          <div class="booking-row-pair">
+            <div class="booking-field">
+              <label class="booking-label" for="bkCheckin">Check-in</label>
+              <input class="booking-input" type="date" id="bkCheckin">
+            </div>
+            <div class="booking-field">
+              <label class="booking-label" for="bkCheckout">Check-out</label>
+              <input class="booking-input" type="date" id="bkCheckout">
+            </div>
+          </div>
+          <button type="button" class="wiz-next-btn" data-next="1">Continue</button>
+        </div>
+
+        <div class="wiz-step" data-step="1">
+          <p class="wiz-step-label">02 — Who</p>
+          <div class="booking-row">
+            <label class="booking-label" for="bkGuests">Guests</label>
+            <select class="booking-select" id="bkGuests">
+              <option>1 guest</option>
+              <option selected>2 guests</option>
+              <option>3 guests</option>
+              <option>4 guests</option>
+            </select>
+          </div>
+          <div class="booking-row">
+            <label class="booking-label" for="bkPromo">Promo Code (optional)</label>
+            <input class="booking-input" type="text" id="bkPromo" placeholder="Enter code">
+          </div>
+          <button type="button" class="wiz-next-btn" data-next="2">Continue</button>
+          <button type="button" class="wiz-back-btn" data-back="0">Back</button>
+        </div>
+
+        <div class="wiz-step" data-step="2">
+          <p class="wiz-step-label">03 — Where</p>
+          <div class="booking-row">
+            <label class="booking-label" for="bkRoom">Room</label>
+            <select class="booking-select" id="bkRoom">
+              <option data-price="420">Deluxe Sea View — €420 / night</option>
+              <option data-price="690">Junior Suite — €690 / night</option>
+              <option data-price="1250">Private Villa — €1,250 / night</option>
+              <option data-price="980">Two Bedroom Suite — €980 / night</option>
+            </select>
+          </div>
+          <button type="button" class="wiz-next-btn" id="bkCheckBtn" data-next="3">See Summary</button>
+          <button type="button" class="wiz-back-btn" data-back="1">Back</button>
+        </div>
+
+        <div class="wiz-step" data-step="3">
+          <p class="wiz-step-label">04 — Confirm</p>
+          <div class="booking-summary is-open" id="bkSummary">
+            <p class="booking-summary-room" id="bkSummaryRoom">Deluxe Sea View</p>
+            <div class="booking-summary-row"><span>Nights</span><span id="bkSummaryNights">4 nights</span></div>
+            <div class="booking-summary-row"><span>Breakfast</span><span>Included</span></div>
+            <div class="booking-summary-row"><span>Cancellation</span><span>Free until 48h before</span></div>
+            <div class="booking-summary-total"><span>Total</span><strong id="bkSummaryTotal">€1,680</strong></div>
+            <a href="#" class="booking-reserve-btn">Reserve Now</a>
+          </div>
+          <button type="button" class="wiz-back-btn" data-back="2">Back</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer-wrapper" id="contact" aria-label="Contact">
+    <img class="footer-bg" id="footerBg" alt="" aria-hidden="true">
+    <div class="footer-content">
+    <img class="footer-logo" id="footerLogo" alt="LITORAL Hotel &amp; Resort">
+    <span class="footer-eyebrow">Chapter V — Contact</span>
+    <h2 class="footer-title">Speak to someone who's there.</h2>
+    <p class="footer-line">LITORAL Hotel &amp; Resort<br>Coastal Road, Bodrum Peninsula, Türkiye</p>
+    <div class="footer-contacts">
+      <a href="tel:+901234567890">+90 123 456 7890</a>
+      <a href="mailto:stay@litoral-resort.com">stay@litoral-resort.com</a>
+    </div>
+    <div class="footer-social">
+      <a href="#">Instagram</a>
+      <a href="#">WhatsApp</a>
+    </div>
+    <p class="footer-copy">© 2026 LITORAL Hotel &amp; Resort. All rights reserved.</p>
+    <p class="gratitude-note" id="gratitudeNote">You made it all the way here. Thank you for staying a while.</p>
+    </div>
+  </footer>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
